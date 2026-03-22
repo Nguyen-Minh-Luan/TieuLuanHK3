@@ -25,4 +25,10 @@ public class AuthService {
         u.setEmail(email);
         return authRepo.save(u);
     }
+    public boolean checkLogin(String username , String password){
+        User u = (User) authRepo.findByUsername(username);
+        String hashedPassword = hashMachine.encode(password);
+        System.out.println(hashedPassword);
+        return username.equals(u.getUsername()) && hashMachine.matches(password,u.getPassword());
+    }
 }
