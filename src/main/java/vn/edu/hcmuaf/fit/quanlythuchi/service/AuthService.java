@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.User;
 import vn.edu.hcmuaf.fit.quanlythuchi.repository.AuthRepository;
 
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.Optional;
 
 @Service
@@ -23,6 +25,19 @@ public class AuthService {
         u.setPassword(hashedPassword);
         u.setFullName(fullName);
         u.setEmail(email);
+        u.setRole(0);
+        return authRepo.save(u);
+    }
+    public User createAmin(String username,String password,String fullName,String email){
+        User u = new User();
+        String hashedPassword = hashMachine.encode(password);
+        u.setUsername(username);
+        u.setPassword(hashedPassword);
+        u.setFullName(fullName);
+        u.setEmail(email);
+        u.setRole(1);
+        u.setIsDeleted(false);
+        u.setCreated_at(new Date());
         return authRepo.save(u);
     }
     public boolean checkLogin(String username , String password){

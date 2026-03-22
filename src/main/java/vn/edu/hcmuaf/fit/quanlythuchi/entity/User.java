@@ -3,9 +3,7 @@ package vn.edu.hcmuaf.fit.quanlythuchi.entity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Generated;
 import lombok.NoArgsConstructor;
-import vn.edu.hcmuaf.fit.quanlythuchi.entity.Role;
 
 import java.util.Date;
 
@@ -18,12 +16,10 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "role_id")
-    private Role role;
     @Column(unique = true,nullable = false)
     private String username;
     private String password;
+    private Integer role;
     @Column(name = "full_name")
     private String fullName;
     @Column(unique = true)
@@ -31,4 +27,5 @@ public class User {
     private Boolean isDeleted;
     private Date created_at;
     private Date update_at;
+    private String token;
 }
