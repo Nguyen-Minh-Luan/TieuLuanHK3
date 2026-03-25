@@ -15,5 +15,5 @@ import java.util.Optional;
 //Vì nếu khai báo class thì ta phải override lại tất cả các hàm có trong interface JPARepository
 //rất phức tạp vì JPARepository đã cung cấp đầy đủ CRUD cho ta hết rồi không cần phải viết lại cái gì nữa
 public interface AuthRepository extends JpaRepository<User, Long> {
-    Object findByUsername(String username);
+    Optional<User> findByUsername(String username);
 }

@@ -1,8 +1,10 @@
 package vn.edu.hcmuaf.fit.quanlythuchi.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import vn.edu.hcmuaf.fit.quanlythuchi.config.JwtUtil;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.User;
 import vn.edu.hcmuaf.fit.quanlythuchi.repository.AuthRepository;
 
@@ -11,14 +13,17 @@ import java.util.Date;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class AuthService {
-    @Autowired
-    private AuthRepository authRepo;
+    private final AuthRepository authRepo;
+    private final JwtUtil jwt;
     private BCryptPasswordEncoder hashMachine = new BCryptPasswordEncoder();
+
     public Optional<User> findById(Long id) {
         return authRepo.findById(id);
     }
-    public User createUser(String username,String password,String fullName,String email){
+
+    public User createUser(String username, String password, String fullName, String email) {
         User u = new User();
         String hashedPassword = hashMachine.encode(password);
         u.setUsername(username);
@@ -28,7 +33,8 @@ public class AuthService {
         u.setRole(0);
         return authRepo.save(u);
     }
-    public User createAmin(String username,String password,String fullName,String email){
+
+    public User createAmin(String username, String password, String fullName, String email) {
         User u = new User();
         String hashedPassword = hashMachine.encode(password);
         u.setUsername(username);
@@ -40,10 +46,16 @@ public class AuthService {
         u.setCreated_at(new Date());
         return authRepo.save(u);
     }
-    public boolean checkLogin(String username , String password){
-        User u = (User) authRepo.findByUsername(username);
-        String hashedPassword = hashMachine.encode(password);
-        System.out.println(hashedPassword);
-        return username.equals(u.getUsername()) && hashMachine.matches(password,u.getPassword());
+
+    public String checkLogin(String username, String password) {
+        Optional<User> optionalUser = authRepo.findByUsername(username);
+        if (optionalUser.isPresent()) {
+            User u = optionalUser.get();
+            String hashedPassword = hashMachine.encode(password);
+            if (username.equals(u.getUsername()) && hashMachine.matches(password, u.getPassword())) {
+                return jwt.generateToken(u);
+            }
+        }
+        return "Đăng Nhập Thất Bại";
     }
 }
