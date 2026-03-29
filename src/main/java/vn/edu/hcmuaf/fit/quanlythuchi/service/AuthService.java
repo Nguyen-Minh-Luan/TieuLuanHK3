@@ -58,4 +58,31 @@ public class AuthService {
         }
         return "Đăng Nhập Thất Bại";
     }
+    public boolean deleteUser(String username){
+        Optional<User> optionalUser = authRepo.findByUsername(username);
+        if(optionalUser.isPresent()){
+            User u = optionalUser.get();
+            u.setIsDeleted(true);
+            authRepo.save(u);
+            return true;
+        }
+        return false;
+    }
+    public void updateUser(Long id, User user) {
+        Optional<User> optionalUser = authRepo.findById(id);
+        try {
+            if (optionalUser.isPresent()) {
+                User u = optionalUser.get();
+                u.setUsername(user.getUsername());
+                if (user.getPassword() != null && !user.getPassword().trim().isEmpty()) {
+                    u.setPassword(hashMachine.encode(user.getPassword()));
+                }
+                u.setEmail(user.getEmail());
+                u.setFullName(user.getFullName());
+                authRepo.save(u);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi cập nhật: Có thể do trùng Email hoặc Username! " + e.getMessage());
+        }
+    }
 }

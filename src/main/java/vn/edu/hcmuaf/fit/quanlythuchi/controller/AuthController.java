@@ -22,4 +22,8 @@ public class AuthController {
     public String checkLogin(@RequestBody User u){
         return authService.checkLogin(u.getUsername(),u.getPassword());
     }
+    @PutMapping("/user/{id}")
+    public void updateUser(@PathVariable Long id, @RequestBody User user){
+        authService.updateUser(id,user);
+    }
 }

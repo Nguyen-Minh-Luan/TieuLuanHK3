@@ -8,7 +8,7 @@ import java.util.Optional;
 
 @Repository
 //nói thẳng ra Repository nó chính là DAO ( Data Access Object), có chức năng đi lấy, thêm, xoá, sửa dữ liệu từ Database
-//1.Lý do tại sao JPARepository là 1 interface tại sao lại dùng extends mà không dùng impleents?
+//1.Lý do tại sao JPARepository là 1 interface tại sao lại dùng extends mà không dùng implements?
 //Vì đó là luật của JAVA vì AuthRepository là 1 interface và JPARepository cũng là 1 interface
 //để 2 interface có thể chơi với nhau thì phải dùng extends
 //2.Tại sao AuthRepository lại khai báo là 1 interface mà không phải là class ?

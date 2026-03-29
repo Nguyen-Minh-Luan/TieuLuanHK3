@@ -23,7 +23,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
-
+    //Spring Security chỉ làm việc với SecurityContextHolder nó sẽ vào SecurityContextHolder để check những thứ có trong đó có hợp lệ để gọi api đó không
+    // nếu hợp lệ nó sẽ cho qua
+    //và để bỏ vào SecurityContextHolder thì ta cần phải chuyển về UsernamePasswordAuthenticationToken
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
@@ -42,20 +44,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                System.out.println("Bác bảo vệ đã cho phép: " + user.getUsername() + " (Quyền: " + roleName + ") đi qua.");
+                System.out.println("đã cho phép: " + user.getUsername() + " (Quyền: " + roleName + ") đi qua.");
             }
         } catch (Exception e) {
             System.out.println("Lỗi xác thực tại Filter: " + e.getMessage());
         }
 
-        // Mở cửa cho đi tiếp vào các API
         filterChain.doFilter(request, response);
     }
 
     private String parseJwt(HttpServletRequest request) {
         String headerAuth = request.getHeader("Authorization");
         if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
-            return headerAuth.substring(7); // Cắt bỏ chữ "Bearer " để lấy đúng chuỗi mã
+            return headerAuth.substring(7);
         }
         return null;
     }
