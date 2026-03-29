@@ -1,14 +1,13 @@
 package vn.edu.hcmuaf.fit.quanlythuchi.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import vn.edu.hcmuaf.fit.quanlythuchi.config.JwtUtil;
+import vn.edu.hcmuaf.fit.quanlythuchi.dto.UserDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.User;
 import vn.edu.hcmuaf.fit.quanlythuchi.repository.AuthRepository;
 
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Optional;
 
@@ -19,19 +18,17 @@ public class AuthService {
     private final JwtUtil jwt;
     private BCryptPasswordEncoder hashMachine = new BCryptPasswordEncoder();
 
-    public Optional<User> findById(Long id) {
-        return authRepo.findById(id);
-    }
-
-    public User createUser(String username, String password, String fullName, String email) {
+    public Long createUser(String username, String password, String fullName, String email) {
         User u = new User();
         String hashedPassword = hashMachine.encode(password);
         u.setUsername(username);
         u.setPassword(hashedPassword);
         u.setFullName(fullName);
         u.setEmail(email);
+        u.setIsDeleted(false);
         u.setRole(0);
-        return authRepo.save(u);
+        authRepo.save(u);
+        return u.getId();
     }
 
     public User createAmin(String username, String password, String fullName, String email) {
@@ -51,15 +48,18 @@ public class AuthService {
         Optional<User> optionalUser = authRepo.findByUsername(username);
         if (optionalUser.isPresent()) {
             User u = optionalUser.get();
-            String hashedPassword = hashMachine.encode(password);
-            if (username.equals(u.getUsername()) && hashMachine.matches(password, u.getPassword())) {
-                return jwt.generateToken(u);
+            if(u.getIsDeleted()){
+                return "Tài khoản đã bị xoá";
             }
+                String hashedPassword = hashMachine.encode(password);
+                if (username.equals(u.getUsername()) && hashMachine.matches(password, u.getPassword())) {
+                    return jwt.generateToken(u);
+                }
         }
         return "Đăng Nhập Thất Bại";
     }
-    public boolean deleteUser(String username){
-        Optional<User> optionalUser = authRepo.findByUsername(username);
+    public boolean deleteUser(Long id){
+        Optional<User> optionalUser = authRepo.findById(id);
         if(optionalUser.isPresent()){
             User u = optionalUser.get();
             u.setIsDeleted(true);
@@ -73,12 +73,18 @@ public class AuthService {
         try {
             if (optionalUser.isPresent()) {
                 User u = optionalUser.get();
-                u.setUsername(user.getUsername());
+                if (user.getUsername() != null && !user.getUsername().trim().isEmpty()) {
+                    u.setUsername(user.getUsername());
+                }
+                if (user.getEmail() != null && !user.getEmail().trim().isEmpty()) {
+                    u.setEmail(user.getEmail());
+                }
+                if (user.getFullName() != null && !user.getFullName().trim().isEmpty()) {
+                    u.setFullName(user.getFullName());
+                }
                 if (user.getPassword() != null && !user.getPassword().trim().isEmpty()) {
                     u.setPassword(hashMachine.encode(user.getPassword()));
                 }
-                u.setEmail(user.getEmail());
-                u.setFullName(user.getFullName());
                 authRepo.save(u);
             }
         } catch (Exception e) {
