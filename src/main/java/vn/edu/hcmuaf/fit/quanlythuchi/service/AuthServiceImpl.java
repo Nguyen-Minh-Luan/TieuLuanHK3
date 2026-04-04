@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import vn.edu.hcmuaf.fit.quanlythuchi.config.JwtUtil;
-import vn.edu.hcmuaf.fit.quanlythuchi.dto.UserDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.User;
 import vn.edu.hcmuaf.fit.quanlythuchi.repository.AuthRepository;
 
@@ -13,7 +12,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class AuthService {
+public class AuthServiceImpl {
     private final AuthRepository authRepo;
     private final JwtUtil jwt;
     private BCryptPasswordEncoder hashMachine = new BCryptPasswordEncoder();

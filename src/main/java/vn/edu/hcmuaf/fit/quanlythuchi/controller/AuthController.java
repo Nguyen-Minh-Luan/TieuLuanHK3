@@ -2,16 +2,15 @@ package vn.edu.hcmuaf.fit.quanlythuchi.controller;
 
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.User;
-import vn.edu.hcmuaf.fit.quanlythuchi.service.AuthService;
+import vn.edu.hcmuaf.fit.quanlythuchi.service.AuthServiceImpl;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/auth")
 public class AuthController {
-    private final AuthService authService;
+    private final AuthServiceImpl authService;
     @PostMapping("/user")
     public Long register(@RequestBody User user){
         Long id = authService.createUser(user.getUsername(),user.getPassword(),user.getFullName(),user.getEmail());
