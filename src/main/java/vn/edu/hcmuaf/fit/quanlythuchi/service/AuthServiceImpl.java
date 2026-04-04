@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import vn.edu.hcmuaf.fit.quanlythuchi.config.JwtUtil;
+import vn.edu.hcmuaf.fit.quanlythuchi.dto.UserResponseDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.User;
 import vn.edu.hcmuaf.fit.quanlythuchi.repository.AuthRepository;
 
@@ -12,11 +13,12 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class AuthServiceImpl {
+public class AuthServiceImpl implements AuthService{
     private final AuthRepository authRepo;
     private final JwtUtil jwt;
     private BCryptPasswordEncoder hashMachine = new BCryptPasswordEncoder();
 
+    @Override
     public Long createUser(String username, String password, String fullName, String email) {
         User u = new User();
         String hashedPassword = hashMachine.encode(password);
@@ -29,7 +31,7 @@ public class AuthServiceImpl {
         authRepo.save(u);
         return u.getId();
     }
-
+    @Override
     public User createAmin(String username, String password, String fullName, String email) {
         User u = new User();
         String hashedPassword = hashMachine.encode(password);
@@ -42,21 +44,26 @@ public class AuthServiceImpl {
         u.setCreated_at(new Date());
         return authRepo.save(u);
     }
-
-    public String checkLogin(String username, String password) {
+    @Override
+    public UserResponseDTO checkLogin(String username, String password) {
         Optional<User> optionalUser = authRepo.findByUsername(username);
+        UserResponseDTO urdto = new UserResponseDTO();
         if (optionalUser.isPresent()) {
             User u = optionalUser.get();
             if(u.getIsDeleted()){
-                return "Tài khoản đã bị xoá";
+                throw new RuntimeException("Tài khoản đã bị xoá");
             }
+            urdto.setUsername(u.getUsername());
+            urdto.setFullname(u.getFullName());
                 String hashedPassword = hashMachine.encode(password);
                 if (username.equals(u.getUsername()) && hashMachine.matches(password, u.getPassword())) {
-                    return jwt.generateToken(u);
+                    urdto.setToken(jwt.generateToken(u));
+                    return urdto;
                 }
         }
-        return "Đăng Nhập Thất Bại";
+        throw new RuntimeException("Đăng Nhập thất bại");
     }
+    @Override
     public boolean deleteUser(Long id){
         Optional<User> optionalUser = authRepo.findById(id);
         if(optionalUser.isPresent()){
@@ -67,6 +74,7 @@ public class AuthServiceImpl {
         }
         return false;
     }
+    @Override
     public void updateUser(Long id, User user) {
         Optional<User> optionalUser = authRepo.findById(id);
         try {
