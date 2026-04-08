@@ -1,4 +1,4 @@
-package vn.edu.hcmuaf.fit.quanlythuchi.service;
+package vn.edu.hcmuaf.fit.quanlythuchi.service.auth;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -20,6 +20,7 @@ public class AuthServiceImpl implements AuthService{
 
     @Override
     public Long createUser(String username, String password, String fullName, String email) {
+        System.out.println("--- Đã vào createUser serviceImpl ---");
         User u = new User();
         String hashedPassword = hashMachine.encode(password);
         u.setUsername(username);
@@ -54,7 +55,7 @@ public class AuthServiceImpl implements AuthService{
                 throw new RuntimeException("Tài khoản đã bị xoá");
             }
             urdto.setUsername(u.getUsername());
-            urdto.setFullname(u.getFullName());
+            urdto.setFullName(u.getFullName());
                 String hashedPassword = hashMachine.encode(password);
                 if (username.equals(u.getUsername()) && hashMachine.matches(password, u.getPassword())) {
                     urdto.setToken(jwt.generateToken(u));

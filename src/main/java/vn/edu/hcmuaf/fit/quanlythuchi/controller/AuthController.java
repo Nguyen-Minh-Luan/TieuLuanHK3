@@ -7,10 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.UserResponseDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.User;
-import vn.edu.hcmuaf.fit.quanlythuchi.repository.AuthRepository;
-import vn.edu.hcmuaf.fit.quanlythuchi.service.AuthService;
-
-import java.util.Optional;
+import vn.edu.hcmuaf.fit.quanlythuchi.service.auth.AuthService;
 
 @RestController
 @RequiredArgsConstructor

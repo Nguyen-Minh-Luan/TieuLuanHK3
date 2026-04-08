@@ -1,11 +1,8 @@
-package vn.edu.hcmuaf.fit.quanlythuchi.service;
+package vn.edu.hcmuaf.fit.quanlythuchi.service.auth;
 
 import org.springframework.stereotype.Service;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.UserResponseDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.User;
-
-import java.util.Date;
-import java.util.Optional;
 
 @Service
 public interface AuthService{
