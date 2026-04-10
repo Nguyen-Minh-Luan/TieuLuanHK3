@@ -1,5 +1,6 @@
 package vn.edu.hcmuaf.fit.quanlythuchi.service.auth;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -65,10 +66,14 @@ public class AuthServiceImpl implements AuthService{
         throw new RuntimeException("Đăng Nhập thất bại");
     }
     @Override
+    @Transactional
     public boolean deleteUser(Long id){
         Optional<User> optionalUser = authRepo.findById(id);
         if(optionalUser.isPresent()){
             User u = optionalUser.get();
+            if(u.getIsDeleted()){
+                return true;
+            }
             u.setIsDeleted(true);
             authRepo.save(u);
             return true;
