@@ -28,11 +28,8 @@ public class FundServiceImpl implements FundService {
 
     @Override
     @Transactional
-    public Fund createFund(Fund fund) {
+    public Fund createFund(FundResponseDTO fund) {
         Fund realFund = new Fund();
-        if (fund.getCurrentBalance() == null) {
-            realFund.setCurrentBalance(fund.getInitialBalance());
-        }
         realFund.setName(fund.getName());
         realFund.setType(fund.getType());
         realFund.setInitialBalance(fund.getInitialBalance());
@@ -47,6 +44,9 @@ public class FundServiceImpl implements FundService {
     public Fund updateFund(Long id, FundResponseDTO fundDTO) {
         try {
             return fundRepository.findById(id).map(existingFund -> {
+                if(existingFund.getIsDeleted()){
+                    throw new RuntimeException("Nguồn tiền này đã bị xoá không thể update");
+                }
                 if (fundDTO.getName() != null && !fundDTO.getName().trim().isEmpty()) {
                     existingFund.setName(fundDTO.getName());
                 }

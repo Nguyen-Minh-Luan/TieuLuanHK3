@@ -18,7 +18,7 @@ public class FundController {
     private final FundService fundService;
 
     @PostMapping
-    public ResponseEntity<?> createFund(@RequestBody Fund fund) {
+    public ResponseEntity<?> createFund(@RequestBody FundResponseDTO fund) {
         try {
             Fund createdFund = fundService.createFund(fund);
             return new ResponseEntity<Fund>(createdFund,HttpStatus.CREATED);

@@ -9,7 +9,7 @@ import java.util.Optional;
 
 @Service
 public interface FundService {
-    Fund createFund(Fund fund);
+    Fund createFund(FundResponseDTO fund);
     Fund updateFund(Long id, FundResponseDTO fundDTO);
     void deleteFund(Long id);
     void updateCurrentBalance(Long fundId, Double amount, String transactionType);
