@@ -20,13 +20,15 @@ public class Transaction {
     private Fund fund;
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "categories_id")
-    private Categories categories;
+    private Category categories;
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "partner_id")
     private Partner partner;
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
     private User user;
+    @Column(name = "parent_id")
+    private Long parentId;
     private String transaction_code;
     private Date transaction_date;
     private String type;
