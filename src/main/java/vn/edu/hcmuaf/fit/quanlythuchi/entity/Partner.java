@@ -18,7 +18,5 @@ public class Partner {
     private String type;
     @Column(nullable = false)
     private String email;
-
-
-
+    private Boolean isDeleted;
 }

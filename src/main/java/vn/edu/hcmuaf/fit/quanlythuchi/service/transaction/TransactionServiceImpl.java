@@ -4,13 +4,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.TransactionDTO;
-import vn.edu.hcmuaf.fit.quanlythuchi.entity.Fund;
-import vn.edu.hcmuaf.fit.quanlythuchi.entity.Transaction;
-import vn.edu.hcmuaf.fit.quanlythuchi.repository.FundRepository;
-import vn.edu.hcmuaf.fit.quanlythuchi.repository.TransactionRepository;
+import vn.edu.hcmuaf.fit.quanlythuchi.entity.*;
+import vn.edu.hcmuaf.fit.quanlythuchi.repository.*;
 import vn.edu.hcmuaf.fit.quanlythuchi.service.transaction.TransactionService;
 
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -20,7 +19,9 @@ public class TransactionServiceImpl implements TransactionService {
     private final TransactionRepository transactionRepository;
     private final FundRepository fundRepository;
     // Cần inject thêm CategoryRepository, UserRepository... tùy thực tế dự án
-
+    private final CategoryRepository categoryRepository;
+    private final UserRepository userRepository;
+    private final PartnerRepository partnerRepository;
     @Override
     @Transactional
     public Transaction createTransaction(TransactionDTO request) {
@@ -51,11 +52,34 @@ public class TransactionServiceImpl implements TransactionService {
         // Cập nhật số dư Fund
         fundRepository.save(fund);
 
-        // 4. Map DTO sang Entity và lưu Transaction
+        // 4. Khởi tạo và Map DTO sang Entity
         Transaction transaction = new Transaction();
-        transaction.setFund(fund);
-        // ... (Map các entity khác như Category, User, Partner tương tự như trên) ...
 
+        // --- BẮT ĐẦU GẮN CÁC ENTITY LIÊN QUAN ---
+
+        // Gắn Fund
+        transaction.setFund(fund);
+
+        // Lấy và gắn Category (Bắt buộc)
+        Category category = categoryRepository.findById(request.getCategoryId())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy Hạng mục (Category) với ID: " + request.getCategoryId()));
+        transaction.setCategories(category);
+
+        // Lấy và gắn User (Bắt buộc - Người thực hiện giao dịch)
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy Người dùng (User) với ID: " + request.getUserId()));
+        transaction.setUser(user);
+
+        // Lấy và gắn Partner (KHÔNG bắt buộc - Chỉ query khi client có gửi lên partnerId)
+        if (request.getPartnerId() != null) {
+            Partner partner = partnerRepository.findById(request.getPartnerId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy Đối tác (Partner) với ID: " + request.getPartnerId()));
+            transaction.setPartner(partner);
+        }
+
+        // --- KẾT THÚC GẮN ENTITY ---
+
+        // Gắn các thuộc tính cơ bản
         transaction.setType(request.getType().toUpperCase());
         transaction.setAmount(request.getAmount());
         transaction.setNote(request.getNote());
@@ -65,62 +89,134 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setTransaction_date(new Date());
         transaction.setCreated_at(new Date());
         transaction.setDatetime(new Date());
-        transaction.setStatus("COMPLETED");
+        transaction.setStatus("ACTIVE"); // Đổi thành ACTIVE cho đồng bộ với logic Update của bạn ở trên
 
         return transactionRepository.save(transaction);
     }
     @Override
     @Transactional
     public Transaction updateTransaction(Long oldId, TransactionDTO newRequest) {
+        // Lấy giao dịch cũ lên
         Transaction oldTx = transactionRepository.findById(oldId)
                 .orElseThrow(() -> new RuntimeException("Giao dịch không tồn tại"));
 
-        // 1. Hoàn tác số dư của giao dịch cũ
-        Fund fund = oldTx.getFund();
-        if ("INCOME".equals(oldTx.getType())) {
-            fund.setCurrentBalance(fund.getCurrentBalance() - oldTx.getAmount());
+        // 1. HOÀN TÁC SỐ DƯ CỦA GIAO DỊCH CŨ (Trên Fund cũ)
+        Fund oldFund = oldTx.getFund();
+        if ("INCOME".equalsIgnoreCase(oldTx.getType())) {
+            oldFund.setCurrentBalance(oldFund.getCurrentBalance() - oldTx.getAmount());
         } else {
-            fund.setCurrentBalance(fund.getCurrentBalance() + oldTx.getAmount());
+            oldFund.setCurrentBalance(oldFund.getCurrentBalance() + oldTx.getAmount());
         }
 
-        // 2. Đánh dấu bản ghi cũ là đã được cập nhật (để lưu vết)
+        // 2. ĐÁNH DẤU BẢN GHI CŨ LÀ UPDATED
         oldTx.setStatus("UPDATED");
         transactionRepository.save(oldTx);
 
-        // 3. Tạo bản ghi mới (Create new instead of edit)
+        // 3. TẠO BẢN GHI MỚI VÀ MAP DỮ LIỆU
         Transaction newTx = new Transaction();
-        // Copy dữ liệu từ Request, thiết lập parentId = oldId
         newTx.setParentId(oldId);
         newTx.setStatus("ACTIVE");
-        // ... set các trường khác ...
 
-        // 4. Cập nhật số dư theo số tiền mới
-        if ("INCOME".equals(newTx.getType())) {
-            fund.setCurrentBalance(fund.getCurrentBalance() + newTx.getAmount());
-        } else {
-            fund.setCurrentBalance(fund.getCurrentBalance() - newTx.getAmount());
+        // --- Bắt đầu set các trường từ Request ---
+
+        // Lấy và gắn Nguồn tiền (Có thể là Fund cũ, hoặc Fund mới nếu người dùng chọn đổi Nguồn tiền)
+        Fund targetFund = oldFund;
+        if (!oldFund.getId().equals(newRequest.getFundId())) {
+            targetFund = fundRepository.findById(newRequest.getFundId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy Nguồn tiền (Fund) mới với ID: " + newRequest.getFundId()));
+        }
+        newTx.setFund(targetFund);
+
+        // Lấy và gắn Category
+        Category category = categoryRepository.findById(newRequest.getCategoryId())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy Hạng mục với ID: " + newRequest.getCategoryId()));
+        newTx.setCategories(category);
+
+        // Lấy và gắn User (Người thực hiện hành động update này)
+        User user = userRepository.findById(newRequest.getUserId())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy Người dùng với ID: " + newRequest.getUserId()));
+        newTx.setUser(user);
+
+        // Lấy và gắn Partner (Không bắt buộc)
+        if (newRequest.getPartnerId() != null) {
+            Partner partner = partnerRepository.findById(newRequest.getPartnerId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy Đối tác với ID: " + newRequest.getPartnerId()));
+            newTx.setPartner(partner);
         }
 
-        fundRepository.save(fund);
+        // Map các trường cơ bản
+        newTx.setType(newRequest.getType().toUpperCase());
+        newTx.setAmount(newRequest.getAmount());
+        newTx.setNote(newRequest.getNote());
+
+        // Xử lý các trường thời gian và mã giao dịch
+        newTx.setTransaction_code("TXN-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+
+        // Lưu ý: Ngày phát sinh giao dịch nên lấy theo ngày của bản ghi gốc để không làm sai lệch báo cáo tháng
+        newTx.setTransaction_date(oldTx.getTransaction_date());
+
+        // Ngày giờ tạo bản ghi mới này thì lấy theo thời gian thực tại
+        newTx.setCreated_at(new Date());
+        newTx.setDatetime(new Date());
+
+        // --- Kết thúc set các trường ---
+
+        // 4. CẬP NHẬT SỐ DƯ THEO SỐ TIỀN MỚI (Trên targetFund)
+        if ("INCOME".equalsIgnoreCase(newTx.getType())) {
+            targetFund.setCurrentBalance(targetFund.getCurrentBalance() + newTx.getAmount());
+        } else {
+            // Validation: Nếu là phiếu chi, quỹ mới phải đủ tiền
+            if (targetFund.getCurrentBalance() < newTx.getAmount()) {
+                throw new RuntimeException("Số dư trong nguồn tiền không đủ để thực hiện Phiếu Chi cập nhật!");
+            }
+            targetFund.setCurrentBalance(targetFund.getCurrentBalance() - newTx.getAmount());
+        }
+
+        // 5. LƯU THAY ĐỔI VÀO DATABASE
+        // Nếu đổi sang quỹ khác, phải lưu quỹ cũ (đã hoàn tiền) riêng
+        if (!oldFund.getId().equals(targetFund.getId())) {
+            fundRepository.save(oldFund);
+        }
+        fundRepository.save(targetFund); // Lưu quỹ mới (đã trừ/cộng tiền mới)
+
         return transactionRepository.save(newTx);
     }
     @Override
     @Transactional
-    //hàm cancel giao dịch của admin
     public void cancelTransaction(Long txId) {
-        Transaction tx = transactionRepository.findById(txId).get();
+        // 1. Lấy giao dịch an toàn
+        Transaction tx = transactionRepository.findById(txId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy giao dịch với ID: " + txId));
 
+        // 2. CHECK LOGIC: Chỉ cho phép hủy nếu giao dịch đang ở trạng thái ACTIVE
+        if (!"ACTIVE".equalsIgnoreCase(tx.getStatus())) {
+            throw new IllegalStateException("Hủy thất bại: Chỉ có thể hủy giao dịch đang ở trạng thái ACTIVE!");
+        }
+
+        // 3. Đổi trạng thái thành CANCELLED
         tx.setStatus("CANCELLED");
 
-        // Hoàn lại tiền vào quỹ
+        // 4. Hoàn lại tiền vào quỹ
         Fund fund = tx.getFund();
-        if ("INCOME".equals(tx.getType())) {
+        if ("INCOME".equalsIgnoreCase(tx.getType())) {
             fund.setCurrentBalance(fund.getCurrentBalance() - tx.getAmount());
         } else {
             fund.setCurrentBalance(fund.getCurrentBalance() + tx.getAmount());
         }
 
+        // 5. Lưu thay đổi
         fundRepository.save(fund);
         transactionRepository.save(tx);
+    }
+    @Override
+    public Transaction getTransactionById(Long id) {
+        return transactionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy Giao dịch với ID: " + id));
+    }
+
+    @Override
+    public List<Transaction> getAllTransactions() {
+        // Lấy tất cả giao dịch (nếu muốn chỉ lấy ACTIVE thì bạn sửa lại trong Repository nhé)
+        return transactionRepository.findAll();
     }
 }

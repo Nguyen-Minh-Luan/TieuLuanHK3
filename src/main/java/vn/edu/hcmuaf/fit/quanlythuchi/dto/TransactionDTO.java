@@ -13,7 +13,8 @@ public class TransactionDTO {
     private Long categoryId;
     private Long partnerId;
     private Long userId;
-    private String type; // "INCOME" hoặc "EXPENSE"
+    private String type;
+    private String status;
     private Double amount;
     private String note;
 }
