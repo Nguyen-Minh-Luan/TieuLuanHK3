@@ -11,7 +11,7 @@ import vn.edu.hcmuaf.fit.quanlythuchi.service.fund.FundService;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/fund")
+@RequestMapping("/funds")
 @RequiredArgsConstructor
 public class FundController {
 
@@ -50,6 +50,22 @@ public class FundController {
             return ResponseEntity.ok("Xóa nguồn tiền thành công!");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+    @GetMapping("/total-balance")
+    public ResponseEntity<?> getTotalFundBalance() {
+        try {
+            // Gọi service với tên hàm tương ứng
+            Double totalBalance = fundService.getTotalFund();
+
+            // Trả về kết quả dưới dạng Map để Frontend nhận được JSON: { "totalBalance": ... }
+            java.util.Map<String, Double> response = new java.util.HashMap<>();
+            response.put("totalBalance", totalBalance);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            // Trả về lỗi nếu có vấn đề hệ thống
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
 }

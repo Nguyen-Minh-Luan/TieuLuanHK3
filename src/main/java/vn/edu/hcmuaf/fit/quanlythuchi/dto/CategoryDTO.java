@@ -17,5 +17,4 @@ public class CategoryDTO {
     private BigDecimal budgeting;
     private Integer tax;
     private Long parentId;
-    private List<CategoryDTO> children;
 }

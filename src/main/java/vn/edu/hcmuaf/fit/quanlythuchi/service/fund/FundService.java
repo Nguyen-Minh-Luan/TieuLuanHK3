@@ -14,4 +14,5 @@ public interface FundService {
     void deleteFund(Long id);
     void updateCurrentBalance(Long fundId, Double amount, String transactionType);
     Optional<Fund> getFundById(Long id);
+    Double getTotalFund();
 }

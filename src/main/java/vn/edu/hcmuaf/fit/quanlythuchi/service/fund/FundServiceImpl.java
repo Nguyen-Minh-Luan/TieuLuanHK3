@@ -14,6 +14,8 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class FundServiceImpl implements FundService {
+
+
     private final FundRepository fundRepository;
 
     @Override
@@ -115,5 +117,16 @@ public class FundServiceImpl implements FundService {
     @Override
     public Optional<Fund> getFundById(Long id) {
         return fundRepository.findById(id);
+    }
+
+    @Override
+    public Double getTotalFund() {
+        try {
+            // Sử dụng .orElse(0.0) của Optional để cung cấp giá trị mặc định nếu bị null
+            return fundRepository.getTotalFundBalance().orElse(0.0);
+        } catch (Exception e) {
+            System.err.println("Lỗi hệ thống: " + e.getMessage());
+            throw new RuntimeException("Đã xảy ra lỗi khi tính tổng số dư quỹ!");
+        }
     }
 }

@@ -219,4 +219,41 @@ public class TransactionServiceImpl implements TransactionService {
         // Lấy tất cả giao dịch (nếu muốn chỉ lấy ACTIVE thì bạn sửa lại trong Repository nhé)
         return transactionRepository.findAll();
     }
+    @Override
+    public Double getTotalIncome() {
+        try {
+            // Gọi hàm tính tổng từ Repository và truyền loại là INCOME (Thu)
+            Double totalIncome = transactionRepository.getTotalIncome();
+
+            // Đảm bảo an toàn tuyệt đối (đề phòng database trả về null)
+            if (totalIncome == null) {
+                return 0.0;
+            }
+            return totalIncome;
+
+        } catch (Exception e) {
+            System.err.println("Lỗi hệ thống khi tính tổng thu: " + e.getMessage());
+            throw new RuntimeException("Đã xảy ra lỗi khi tính tổng thu. Vui lòng thử lại sau!");
+        }
+    }
+
+    @Override
+    public Double getTotalExpense() {
+        try {
+            // Gọi hàm tính tổng từ Repository và truyền loại là EXPENSE (Chi)
+            Double totalExpense = transactionRepository.getTotalExpense();
+
+            // Đảm bảo an toàn tuyệt đối
+            if (totalExpense == null) {
+                return 0.0;
+            }
+            return totalExpense;
+
+        } catch (Exception e) {
+            System.err.println("Lỗi hệ thống khi tính tổng chi: " + e.getMessage());
+            throw new RuntimeException("Đã xảy ra lỗi khi tính tổng chi. Vui lòng thử lại sau!");
+        }
+    }
+
+
 }

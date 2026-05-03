@@ -5,6 +5,7 @@ import vn.edu.hcmuaf.fit.quanlythuchi.dto.TransactionDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.Transaction;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public interface TransactionService {
@@ -13,4 +14,6 @@ public interface TransactionService {
     public void cancelTransaction(Long txId);
     Transaction getTransactionById(Long id);
     List<Transaction> getAllTransactions();
+    Double getTotalIncome();
+    Double getTotalExpense();
 }
