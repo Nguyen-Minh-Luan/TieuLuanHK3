@@ -1,14 +1,14 @@
 package vn.edu.hcmuaf.fit.quanlythuchi.service.auth;
 
 import org.springframework.stereotype.Service;
-import vn.edu.hcmuaf.fit.quanlythuchi.dto.UserResponseDTO;
-import vn.edu.hcmuaf.fit.quanlythuchi.entity.User;
+import vn.edu.hcmuaf.fit.quanlythuchi.dto.auth.RegisterRequestDTO;
+import vn.edu.hcmuaf.fit.quanlythuchi.dto.auth.UserDTO;
+import vn.edu.hcmuaf.fit.quanlythuchi.dto.auth.UserResponseDTO;
 
 @Service
 public interface AuthService{
-     Long createUser(String username, String password, String fullName, String email);
-     User createAmin(String username, String password, String fullName, String email);
-     UserResponseDTO checkLogin(String username, String password);
-     boolean deleteUser(Long id);
-     void updateUser(Long id, User user);
+     UserDTO createUser(RegisterRequestDTO request);
+     UserResponseDTO login(String username,String password);
+     void deleteUser(Long id);
+     UserDTO updateUser(Long id, RegisterRequestDTO request);
 }

@@ -23,7 +23,7 @@ public class CategoryServiceImpl implements CategoryService{
         // CẬP NHẬT: Chỉ lấy các hạng mục Cha gốc chưa bị xóa
         List<Category> rootCategories = categoryRepository.findByParentIsNullAndIsDeletedFalse();
         return rootCategories.stream()
-                .map(this::mapToDTO)
+                .map(this::toDTO)
                 .collect(Collectors.toList());
     }
 
@@ -46,7 +46,7 @@ public class CategoryServiceImpl implements CategoryService{
         }
 
         Category savedCategory = categoryRepository.save(category);
-        return mapToDTO(savedCategory);
+        return toDTO(savedCategory);
     }
 
     @Override
@@ -88,7 +88,7 @@ public class CategoryServiceImpl implements CategoryService{
         }
         // 4. Lưu lại
         Category updatedCategory = categoryRepository.save(category);
-        return mapToDTO(updatedCategory);
+        return toDTO(updatedCategory);
     }
 
     @Override
@@ -129,7 +129,7 @@ public class CategoryServiceImpl implements CategoryService{
         categoryRepository.save(category);
     }
 
-    private CategoryDTO mapToDTO(Category category) {
+    private CategoryDTO toDTO(Category category) {
         return CategoryDTO.builder()
                 .id(category.getId())
                 .name(category.getName())
@@ -138,12 +138,10 @@ public class CategoryServiceImpl implements CategoryService{
                 .budgeting(category.getBudgeting())
                 .tax(category.getTax())
                 .parentId(category.getParent() != null ? category.getParent().getId() : null)
-
-                // CẬP NHẬT QUAN TRỌNG: Lọc bỏ các hạng mục con đã bị xóa (isDeleted == true) khỏi cây trả về
                 .children(category.getChildren() != null
                         ? category.getChildren().stream()
-                        .filter(child -> !child.getIsDeleted()) // <-- Lưới lọc ở đây
-                        .map(this::mapToDTO)
+                        .filter(child -> !child.getIsDeleted())
+                        .map(this::toDTO)
                         .collect(Collectors.toList())
                         : null)
                 .build();

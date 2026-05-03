@@ -1,4 +1,4 @@
-    package vn.edu.hcmuaf.fit.quanlythuchi.dto;
+    package vn.edu.hcmuaf.fit.quanlythuchi.dto.auth;
 
     import lombok.*;
 
