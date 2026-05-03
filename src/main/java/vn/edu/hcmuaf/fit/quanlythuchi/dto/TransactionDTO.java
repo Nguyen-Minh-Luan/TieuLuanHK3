@@ -1,14 +1,16 @@
 package vn.edu.hcmuaf.fit.quanlythuchi.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+
+import java.util.Date;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
+@Builder
 public class TransactionDTO {
+    private Long parentId;
     private Long fundId;
     private Long categoryId;
     private Long partnerId;
@@ -17,4 +19,7 @@ public class TransactionDTO {
     private String status;
     private Double amount;
     private String note;
+    private String transactionCode;
+    private Date transactionDate;
+    private Date createdAt;
 }

@@ -138,14 +138,6 @@ public class CategoryServiceImpl implements CategoryService{
                 .budgeting(category.getBudgeting())
                 .tax(category.getTax())
                 .parentId(category.getParent() != null ? category.getParent().getId() : null)
-
-                // CẬP NHẬT QUAN TRỌNG: Lọc bỏ các hạng mục con đã bị xóa (isDeleted == true) khỏi cây trả về
-                .children(category.getChildren() != null
-                        ? category.getChildren().stream()
-                        .filter(child -> !child.getIsDeleted()) // <-- Lưới lọc ở đây
-                        .map(this::mapToDTO)
-                        .collect(Collectors.toList())
-                        : null)
                 .build();
     }
 }
