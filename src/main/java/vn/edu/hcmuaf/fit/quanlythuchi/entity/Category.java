@@ -40,6 +40,7 @@ public class Category {
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
     private List<Category> children = new ArrayList<>();
+
     @Column(name="is_deleted")
     private Boolean isDeleted = false;
 }

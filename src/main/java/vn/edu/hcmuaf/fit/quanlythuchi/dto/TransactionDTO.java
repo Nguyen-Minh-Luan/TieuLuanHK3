@@ -22,4 +22,5 @@ public class TransactionDTO {
     private String transactionCode;
     private Date transactionDate;
     private Date createdAt;
+    private Boolean hasWarning;
 }
