@@ -37,5 +37,7 @@ public class Transaction {
     private String status;
     private Date created_at;
     private Date datetime;
+    @Column(name = "hasWarning")
+    private Boolean hasWarning = false;
 
 }
