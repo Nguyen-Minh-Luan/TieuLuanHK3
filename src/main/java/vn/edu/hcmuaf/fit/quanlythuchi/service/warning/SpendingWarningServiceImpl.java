@@ -29,10 +29,27 @@ public class SpendingWarningServiceImpl implements SpendingWarningService {
     /** Vượt >= 50%  → CRITICAL (cảnh báo đỏ) */
     private static final double CRITICAL_THRESHOLD = 0.50;
 
-
     @Override
     public SpendingWarningDTO analyze(Long categoryId, TransactionDTO requestDTO) {
-        Double newAmount = requestDTO.getAmount();
+        Double currentMonthFromDB = transactionRepository.getCurrentMonthTotalByCategory(categoryId);
+        if (currentMonthFromDB == null) currentMonthFromDB = 0.0;
+
+        // Cộng thêm số tiền của giao dịch vừa tạo vào tổng tháng hiện tại
+        double currentMonthTotal = currentMonthFromDB + requestDTO.getAmount();
+
+        return analyzeInternal(categoryId, currentMonthTotal);
+    }
+
+    @Override
+    public SpendingWarningDTO analyze(Long categoryId) {
+        Double currentMonthFromDB = transactionRepository.getCurrentMonthTotalByCategory(categoryId);
+        double currentMonthTotal = currentMonthFromDB != null ? currentMonthFromDB : 0.0;
+
+        return analyzeInternal(categoryId, currentMonthTotal);
+    }
+
+    private SpendingWarningDTO analyzeInternal(Long categoryId, double currentMonthTotal) {
+
         // ── 1. Lấy tên hạng mục ──────────────────────────────────────────────
         String categoryName = categoryRepository.findById(categoryId)
                 .map(Category::getName)
@@ -71,15 +88,10 @@ public class SpendingWarningServiceImpl implements SpendingWarningService {
                     .build();
         }
 
-        // ── 4. Lấy tổng chi tháng hiện tại (đã bao gồm giao dịch vừa lưu) ──
-        //      newAmount đã được lưu vào DB trước khi hàm này được gọi
-        Double currentMonthFromDB = transactionRepository.getCurrentMonthTotalByCategory(categoryId);
-        if (currentMonthFromDB == null) currentMonthFromDB = 0.0;
-        Double currentMonthTotal = currentMonthFromDB + newAmount;
-        // ── 5. Tính % vượt mức ───────────────────────────────────────────────
+        // ── 4. Tính % vượt mức ───────────────────────────────────────────────
         double overagePercent = (currentMonthTotal - historicalAverage) / historicalAverage;
 
-        // ── 6. Đánh giá ngưỡng & trả về kết quả ─────────────────────────────
+        // ── 5. Đánh giá ngưỡng & trả về kết quả ─────────────────────────────
         if (overagePercent >= CRITICAL_THRESHOLD) {
             return buildWarning(
                     categoryName, currentMonthTotal, historicalAverage, overagePercent,
@@ -122,7 +134,6 @@ public class SpendingWarningServiceImpl implements SpendingWarningService {
                         categoryName, currentMonthTotal, historicalAverage))
                 .build();
     }
-
     // ── Helper ────────────────────────────────────────────────────────────────
     private SpendingWarningDTO buildWarning(String categoryName, Double currentMonthTotal,
                                             Double historicalAverage, double overagePercent,

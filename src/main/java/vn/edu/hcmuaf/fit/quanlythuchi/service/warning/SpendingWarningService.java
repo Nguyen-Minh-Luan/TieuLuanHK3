@@ -14,4 +14,5 @@ public interface SpendingWarningService {
      * @return SpendingWarningDTO chứa thông tin cảnh báo (hoặc không cảnh báo)
      */
     SpendingWarningDTO analyze(Long categoryId, TransactionDTO requestDTO);
+    SpendingWarningDTO analyze(Long categoryId);
 }
