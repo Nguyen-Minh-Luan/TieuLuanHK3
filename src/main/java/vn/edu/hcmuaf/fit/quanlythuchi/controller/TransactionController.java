@@ -66,6 +66,13 @@ public class TransactionController {
 
         return ApiResponse.created(result, responseMessage);
     }
+    @GetMapping("/categories/{categoryId}")
+    public ResponseEntity<ApiResponse<SpendingWarningDTO>> checkWarningByCategory(
+            @PathVariable Long categoryId) {
+        SpendingWarningDTO warning = spendingWarningService.analyze(categoryId);
+        return ApiResponse.ok(warning, "Phân tích chi tiêu hạng mục thành công");
+    }
+
     // --- 2. CẬP NHẬT GIAO DỊCH (Tạo mới bản ghi, bản cũ thành UPDATED) ---
 //    @PutMapping("/{id}")
 //    public ResponseEntity<Transaction> updateTransaction(@PathVariable Long id, @RequestBody TransactionDTO requestDTO) {
