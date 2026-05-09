@@ -6,6 +6,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import vn.edu.hcmuaf.fit.quanlythuchi.config.ApiResponse;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.UserResponseDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.User;
 import vn.edu.hcmuaf.fit.quanlythuchi.service.auth.AuthService;
@@ -17,46 +18,39 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/user")
-    public Long register(@RequestBody User user) {
-        Long id = authService.createUser(user.getUsername(), user.getPassword(), user.getFullName(), user.getEmail());
-        return id;
+    public ResponseEntity<ApiResponse<Long>> register(@RequestBody User user) {
+        Long id = authService.createUser(
+                user.getUsername(), user.getPassword(), user.getFullName(), user.getEmail());
+        return ApiResponse.created(id, "Tạo tài khoản thành công");
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserResponseDTO> checkLogin(@RequestBody User u) {
-        ResponseEntity<UserResponseDTO> res;
+    public ResponseEntity<ApiResponse<UserResponseDTO>> checkLogin(@RequestBody User u) {
         try {
-            res = new ResponseEntity<>(authService.checkLogin(u.getUsername(), u.getPassword()), HttpStatus.OK);
+            UserResponseDTO result = authService.checkLogin(u.getUsername(), u.getPassword());
+            return ApiResponse.ok(result, "Đăng nhập thành công");
         } catch (RuntimeException e) {
-            res = new ResponseEntity<>(UserResponseDTO.builder()
-                    .message(e.getMessage())
-                    .build(), HttpStatus.BAD_REQUEST);
+            return ApiResponse.unauthorized(e.getMessage());
         }
-        return res;
     }
 
     @DeleteMapping("/user/{id}")
-    public ResponseEntity<UserResponseDTO> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long id) {
         boolean isDeleted = authService.deleteUser(id);
         if (isDeleted) {
-            return ResponseEntity.ok(
-                    UserResponseDTO.builder()
-                            .status("delete user")
-                            .message("Đã xoá thành công!")
-                            .build()
-            );
+            return ApiResponse.ok(null, "Xóa tài khoản thành công");
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    UserResponseDTO.builder()
-                            .status("delete user")
-                            .message("Không tìm thấy user với ID: " + id)
-                            .build()
-            );
+            return ApiResponse.error("Không tìm thấy tài khoản với ID: " + id, "USER_NOT_FOUND");
         }
     }
 
     @PatchMapping("/user/{id}")
-    public void updateUser(@PathVariable Long id, @RequestBody User user) {
-        authService.updateUser(id, user);
+    public ResponseEntity<ApiResponse<Void>> updateUser(@PathVariable Long id, @RequestBody User user) {
+        try {
+            authService.updateUser(id, user);
+            return ApiResponse.ok(null, "Cập nhật tài khoản thành công");
+        } catch (RuntimeException e) {
+            return ApiResponse.error(e.getMessage(), "UPDATE_FAILED");
+        }
     }
 }

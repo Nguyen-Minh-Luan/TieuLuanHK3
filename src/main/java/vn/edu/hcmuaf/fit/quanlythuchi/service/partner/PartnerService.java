@@ -6,9 +6,9 @@ import vn.edu.hcmuaf.fit.quanlythuchi.entity.Partner;
 import java.util.List;
 
 public interface PartnerService {
-    Partner createPartner(PartnerDTO request);
-    List<Partner> getAllPartners();
-    Partner getPartnerById(Long id);
-    Partner updatePartner(Long id, PartnerDTO request);
+    PartnerDTO createPartner(PartnerDTO request);
+    List<PartnerDTO> getAllPartners();
+    PartnerDTO getPartnerById(Long id);
+    PartnerDTO updatePartner(Long id, PartnerDTO request);
     void deletePartner(Long id);
 }

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import vn.edu.hcmuaf.fit.quanlythuchi.config.ApiResponse;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.CategoryDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.service.category.CategoryService;
 
@@ -22,9 +23,8 @@ public class CategoryController {
      * URL: http://localhost:8080/categories/tree
      */
     @GetMapping("/tree")
-    public ResponseEntity<List<CategoryDTO>> getCategoryTree() {
-        List<CategoryDTO> categoryTree = categoryService.getCategoryTree();
-        return ResponseEntity.ok(categoryTree); // Trả về HTTP Status 200 (OK)
+    public ResponseEntity<ApiResponse<List<CategoryDTO>>> getCategoryTree() {
+        return ApiResponse.ok(categoryService.getCategoryTree());
     }
 
     /**
@@ -33,10 +33,8 @@ public class CategoryController {
      * URL: http://localhost:8080/categories
      */
     @PostMapping
-    public ResponseEntity<CategoryDTO> createCategory(@RequestBody CategoryDTO categoryDTO) {
-        System.out.println("đã vào CategoryController");
-        CategoryDTO createdCategory = categoryService.createCategory(categoryDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdCategory); // Trả về HTTP Status 201 (Created)
+    public ResponseEntity<ApiResponse<CategoryDTO>> createCategory(@RequestBody CategoryDTO categoryDTO) {
+        return ApiResponse.created(categoryService.createCategory(categoryDTO), "Tạo hạng mục thành công");
     }
 
     /**
@@ -45,12 +43,10 @@ public class CategoryController {
      * URL: http://localhost:8080/categories/{id}
      */
     @PatchMapping("/{id}")
-    public ResponseEntity<CategoryDTO> updateCategory(
+    public ResponseEntity<ApiResponse<CategoryDTO>> updateCategory(
             @PathVariable Long id,
             @RequestBody CategoryDTO categoryDTO) {
-
-        CategoryDTO updatedCategory = categoryService.updateCategory(id, categoryDTO);
-        return ResponseEntity.ok(updatedCategory); // Trả về HTTP Status 200 (OK)
+        return ApiResponse.ok(categoryService.updateCategory(id, categoryDTO), "Cập nhật hạng mục thành công");
     }
 
     /**
@@ -59,8 +55,8 @@ public class CategoryController {
      * URL: http://localhost:8080/categories/{id}
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteCategory(@PathVariable Long id) {
         categoryService.deleteCategory(id);
-        return ResponseEntity.noContent().build(); // Trả về HTTP Status 204 (No Content) - báo hiệu đã xóa thành công và không cần trả về body
+        return ApiResponse.ok(null, "Xóa hạng mục thành công");
     }
 }

@@ -8,6 +8,7 @@ import vn.edu.hcmuaf.fit.quanlythuchi.entity.Partner;
 import vn.edu.hcmuaf.fit.quanlythuchi.repository.PartnerRepository;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -17,7 +18,7 @@ public class PartnerServiceImpl implements PartnerService {
 
     @Override
     @Transactional
-    public Partner createPartner(PartnerDTO request) {
+    public PartnerDTO createPartner(PartnerDTO request) {
         if (request.getName() == null || request.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("Tên đối tác không được để trống!");
         }
@@ -33,35 +34,39 @@ public class PartnerServiceImpl implements PartnerService {
         // Mặc định khi tạo mới thì isDeleted = false
         partner.setIsDeleted(false);
 
-        return partnerRepository.save(partner);
+        return toDTO(partnerRepository.save(partner));
     }
 
     @Override
-    public List<Partner> getAllPartners() {
-        // Chỉ trả về danh sách đối tác đang hoạt động (chưa bị xóa)
-        return partnerRepository.findByIsDeletedFalseOrIsDeletedIsNull();
+    public List<PartnerDTO> getAllPartners() {
+        return partnerRepository.findByIsDeletedFalseOrIsDeletedIsNull()
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public Partner getPartnerById(Long id) {
+    public PartnerDTO getPartnerById(Long id) {
         Partner partner = partnerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy Đối tác với ID: " + id));
 
-        // Kiểm tra thêm: Nếu đối tác đã bị xóa mềm thì ném lỗi không tìm thấy
         if (Boolean.TRUE.equals(partner.getIsDeleted())) {
             throw new RuntimeException("Đối tác này không tồn tại hoặc đã bị xóa!");
         }
 
-        return partner;
+        return toDTO(partner);
     }
 
     @Override
     @Transactional
-    public Partner updatePartner(Long id, PartnerDTO request) {
-        // Lấy đối tác lên (đã bao gồm logic kiểm tra isDeleted)
-        Partner partner = getPartnerById(id);
+    public PartnerDTO updatePartner(Long id, PartnerDTO request) {
+        Partner partner = partnerRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy Đối tác với ID: " + id));
 
-        // 1. Chỉ cập nhật Tên (name) nếu request có gửi lên (khác null)
+        if (Boolean.TRUE.equals(partner.getIsDeleted())) {
+            throw new RuntimeException("Đối tác này không tồn tại hoặc đã bị xóa!");
+        }
+
         if (request.getName() != null) {
             if (request.getName().trim().isEmpty()) {
                 throw new IllegalArgumentException("Tên đối tác không được là chuỗi rỗng!");
@@ -69,7 +74,6 @@ public class PartnerServiceImpl implements PartnerService {
             partner.setName(request.getName());
         }
 
-        // 2. Chỉ cập nhật Email nếu request có gửi lên (khác null)
         if (request.getEmail() != null) {
             if (request.getEmail().trim().isEmpty()) {
                 throw new IllegalArgumentException("Email đối tác không được là chuỗi rỗng!");
@@ -77,27 +81,34 @@ public class PartnerServiceImpl implements PartnerService {
             partner.setEmail(request.getEmail());
         }
 
-        // 3. Chỉ cập nhật Loại (type) nếu request có gửi lên
         if (request.getType() != null) {
             partner.setType(request.getType());
         }
 
-        // Nhờ có @Transactional và cơ chế Dirty Checking của Hibernate,
-        // nó sẽ tự động so sánh và chỉ thực thi lệnh UPDATE dưới DB
-        // nếu thực sự có giá trị nào đó bị thay đổi.
-        return partnerRepository.save(partner);
+        return toDTO(partnerRepository.save(partner));
     }
 
     @Override
     @Transactional
     public void deletePartner(Long id) {
-        // Lấy đối tác lên (hàm này đã kiểm tra ngoại lệ nếu ID không có hoặc đã xóa)
-        Partner partner = getPartnerById(id);
+        Partner partner = partnerRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy Đối tác với ID: " + id));
 
-        // --- LOGIC XÓA MỀM ---
+        if (Boolean.TRUE.equals(partner.getIsDeleted())) {
+            throw new RuntimeException("Đối tác này đã bị xóa trước đó!");
+        }
+
         partner.setIsDeleted(true);
-
-        // Cập nhật lại vào DB thay vì xóa cứng
         partnerRepository.save(partner);
+    }
+
+
+    private PartnerDTO toDTO(Partner partner) {
+        return PartnerDTO.builder()
+                .id(partner.getId())
+                .name(partner.getName())
+                .type(partner.getType())
+                .email(partner.getEmail())
+                .build();
     }
 }

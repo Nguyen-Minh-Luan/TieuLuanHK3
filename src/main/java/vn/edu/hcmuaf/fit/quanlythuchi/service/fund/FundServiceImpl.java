@@ -4,7 +4,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import vn.edu.hcmuaf.fit.quanlythuchi.dto.FundResponseDTO;
+import vn.edu.hcmuaf.fit.quanlythuchi.dto.FundDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.Fund;
 import vn.edu.hcmuaf.fit.quanlythuchi.repository.FundRepository;
 
@@ -21,7 +21,7 @@ public class FundServiceImpl implements FundService {
     @Override
     public void deleteFund(Long id) {
         Fund fund = fundRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy nguồn tiền để xóa với ID: " + id));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy nguồn tiền với ID: " + id));
         if (!fund.getIsDeleted()) {
             fund.setIsDeleted(true);
             fundRepository.save(fund);
@@ -30,47 +30,43 @@ public class FundServiceImpl implements FundService {
 
     @Override
     @Transactional
-    public Fund createFund(FundResponseDTO fund) {
-        Fund realFund = new Fund();
-        realFund.setName(fund.getName());
-        realFund.setType(fund.getType());
-        realFund.setInitialBalance(fund.getInitialBalance());
-        realFund.setCurrentBalance(fund.getInitialBalance());
-        realFund.setStatus(fund.getStatus());
-        realFund.setIsDeleted(false);
-        realFund.setCreated_at(new Date());
-        return fundRepository.save(realFund);
+    public FundDTO createFund(FundDTO request) {
+        Fund fund = new Fund();
+        fund.setName(request.getName());
+        fund.setType(request.getType());
+        fund.setInitialBalance(request.getInitialBalance());
+        fund.setCurrentBalance(request.getInitialBalance()); // currentBalance = initialBalance lúc tạo
+        fund.setStatus(request.getStatus());
+        fund.setIsDeleted(false);
+        fund.setCreated_at(new Date());
+        return toDTO(fundRepository.save(fund));
     }
 
     @Override
-    public Fund updateFund(Long id, FundResponseDTO fundDTO) {
+    public FundDTO updateFund(Long id, FundDTO request) {
         try {
             return fundRepository.findById(id).map(existingFund -> {
-                if(existingFund.getIsDeleted()){
-                    throw new RuntimeException("Nguồn tiền này đã bị xoá không thể update");
+                if (existingFund.getIsDeleted()) {
+                    throw new RuntimeException("Nguồn tiền này đã bị xoá, không thể cập nhật");
                 }
-                if (fundDTO.getName() != null && !fundDTO.getName().trim().isEmpty()) {
-                    existingFund.setName(fundDTO.getName());
+                if (request.getName() != null && !request.getName().trim().isEmpty()) {
+                    existingFund.setName(request.getName());
                 }
-                if (fundDTO.getType() != null && !fundDTO.getType().trim().isEmpty()) {
-                    existingFund.setType(fundDTO.getType());
+                if (request.getType() != null && !request.getType().trim().isEmpty()) {
+                    existingFund.setType(request.getType());
                 }
-                if (fundDTO.getStatus() != null && !fundDTO.getStatus().trim().isEmpty()) {
-                    existingFund.setStatus(fundDTO.getStatus());
+                if (request.getStatus() != null && !request.getStatus().trim().isEmpty()) {
+                    existingFund.setStatus(request.getStatus());
                 }
-                if (fundDTO.getInitialBalance() != null) {
-                    //bởi vì là initialBalance và currentBalance khác nhau nên ta sẽ cập nhật currentBalance sau khi chỉnh sửa initialBalance
-                    // tính delta để tìm ra khoản tiền chênh lệch cho an toàn nhất
-                    // tránh gán thẳng vào current vì làm vậy sẽ bị mất dữ liệu
-                    Double oldInitialBalance = existingFund.getInitialBalance() != null ? existingFund.getInitialBalance() : 0.0;
-                    Double newInitialBalance = fundDTO.getInitialBalance();
-                    Double deltaBalance = newInitialBalance - oldInitialBalance;
-                    Double currentBalance = existingFund.getCurrentBalance() != null ? existingFund.getCurrentBalance() : 0.0;
-                    existingFund.setCurrentBalance(currentBalance + deltaBalance);
-                    existingFund.setInitialBalance(newInitialBalance);
+                if (request.getInitialBalance() != null) {
+                    // Tính delta để cập nhật currentBalance an toàn, không làm mất dữ liệu giao dịch
+                    Double oldInitial = existingFund.getInitialBalance() != null ? existingFund.getInitialBalance() : 0.0;
+                    Double delta = request.getInitialBalance() - oldInitial;
+                    Double current = existingFund.getCurrentBalance() != null ? existingFund.getCurrentBalance() : 0.0;
+                    existingFund.setCurrentBalance(current + delta);
+                    existingFund.setInitialBalance(request.getInitialBalance());
                 }
-                return fundRepository.save(existingFund);
-
+                return toDTO(fundRepository.save(existingFund));
             }).orElseThrow(() -> new RuntimeException("Không tìm thấy nguồn tiền với ID: " + id));
 
         } catch (DataIntegrityViolationException e) {
@@ -90,23 +86,21 @@ public class FundServiceImpl implements FundService {
         return fund.getCurrentBalance() - amount;
     }
 
+    @Override
     @Transactional
     public void updateCurrentBalance(Long fundId, Double amount, String transactionType) {
         fundRepository.findById(fundId).map(fund -> {
-            Double currentBalance = fund.getCurrentBalance();
-            if (currentBalance == null) {
-                currentBalance = fund.getInitialBalance() != null ? fund.getInitialBalance() : 0.0;
-            }
+            Double currentBalance = fund.getCurrentBalance() != null
+                    ? fund.getCurrentBalance()
+                    : (fund.getInitialBalance() != null ? fund.getInitialBalance() : 0.0);
 
             if ("THU".equalsIgnoreCase(transactionType)) {
                 fund.setCurrentBalance(currentBalance + amount);
-
             } else if ("CHI".equalsIgnoreCase(transactionType)) {
                 if (currentBalance < amount) {
                     throw new RuntimeException("Số dư trong nguồn tiền không đủ để thực hiện phiếu chi này!");
                 }
                 fund.setCurrentBalance(currentBalance - amount);
-
             } else {
                 throw new IllegalArgumentException("Loại phiếu không hợp lệ. Chỉ chấp nhận 'THU' hoặc 'CHI'");
             }
@@ -128,5 +122,17 @@ public class FundServiceImpl implements FundService {
             System.err.println("Lỗi hệ thống: " + e.getMessage());
             throw new RuntimeException("Đã xảy ra lỗi khi tính tổng số dư quỹ!");
         }
+    }
+
+
+    private FundDTO toDTO(Fund fund) {
+        return FundDTO.builder()
+                .id(fund.getId())
+                .name(fund.getName())
+                .type(fund.getType())
+                .status(fund.getStatus())
+                .initialBalance(fund.getInitialBalance())
+                .currentBalance(fund.getCurrentBalance())
+                .build();
     }
 }
