@@ -66,7 +66,7 @@ public class TransactionController {
 
         return ApiResponse.created(result, responseMessage);
     }
-    @GetMapping("/categories/{categoryId}")
+        @GetMapping("/categories/{categoryId}")
     public ResponseEntity<ApiResponse<SpendingWarningDTO>> checkWarningByCategory(
             @PathVariable Long categoryId) {
         SpendingWarningDTO warning = spendingWarningService.analyze(categoryId);
