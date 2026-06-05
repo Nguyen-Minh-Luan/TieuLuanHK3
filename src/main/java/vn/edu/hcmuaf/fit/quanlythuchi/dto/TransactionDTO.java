@@ -23,4 +23,7 @@ public class TransactionDTO {
     private Date transactionDate;
     private Date createdAt;
     private Boolean hasWarning;
+    private String reason;
+    private String accompaniedBy;
+    private String originalDocuments;
 }

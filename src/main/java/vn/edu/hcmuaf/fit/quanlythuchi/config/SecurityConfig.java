@@ -15,17 +15,18 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
+
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.POST,"/auth/user").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers(HttpMethod.PATCH,"/auth/user/*").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers(HttpMethod.DELETE,"/auth/user/*").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/auth/user").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/auth/user/*").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/auth/user/*").hasAuthority("ROLE_ADMIN")
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-         return http.build();
+        return http.build();
     }
 
 }

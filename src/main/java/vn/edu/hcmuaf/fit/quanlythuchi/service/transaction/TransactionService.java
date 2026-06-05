@@ -23,4 +23,5 @@ public interface TransactionService {
     List<TransactionDTO> getAllTransactions();
     Double getTotalIncome();
     Double getTotalExpense();
+    TransactionDTO toDTO(Transaction tx);
 }

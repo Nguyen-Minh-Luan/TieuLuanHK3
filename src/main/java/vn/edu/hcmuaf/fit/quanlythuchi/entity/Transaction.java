@@ -33,11 +33,16 @@ public class Transaction {
     private Date transaction_date;
     private String type;
     private Double amount;
+    private String amountInWord;
     private String note;
     private String status;
     private Date created_at;
     private Date datetime;
-    @Column(name = "hasWarning")
+    private String reason;
+    @Column(name = "accompanied_by")
+    private String accompaniedBy;
+    @Column(name = "original_documents")
+    private String originalDocuments;
+    @Column(name = "has_warning")
     private Boolean hasWarning = false;
-
 }

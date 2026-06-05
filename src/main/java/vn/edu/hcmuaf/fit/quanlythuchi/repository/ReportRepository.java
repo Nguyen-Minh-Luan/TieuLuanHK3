@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.Report;
+import vn.edu.hcmuaf.fit.quanlythuchi.entity.Transaction;
 
 import java.util.Date;
 import java.util.List;
@@ -51,6 +52,18 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
                     "  AND t.transaction_date BETWEEN :fromDate AND :toDate",
             nativeQuery = true)
     Double sumExpenseByDateRange(
+            @Param("fromDate") Date fromDate,
+            @Param("toDate") Date toDate);
+
+    /**
+     * Lấy danh sách giao dịch ACTIVE trong khoảng fromDate – toDate.
+     * Dùng nội bộ trong ReportServiceImpl để đính kèm vào ReportDTO.
+     */
+    @Query("SELECT t FROM Transaction t " +
+            "WHERE t.status = 'ACTIVE' " +
+            "  AND t.transaction_date BETWEEN :fromDate AND :toDate " +
+            "ORDER BY t.transaction_date ASC")
+    List<Transaction> findTransactionsByDateRange(
             @Param("fromDate") Date fromDate,
             @Param("toDate") Date toDate);
 }
