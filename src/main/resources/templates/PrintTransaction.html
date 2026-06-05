@@ -3,21 +3,18 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title th:text="${tx != null && tx.type == 'INCOME' ? 'Mẫu Phiếu Thu Theo Thông Tư 99' : 'Mẫu Phiếu Chi Theo Thông Tư 99'}">Mẫu Phiếu Chi Theo Thông Tư 99</title>
+    <title th:text="${tx != null && tx.type == 'INCOME' ? 'Mẫu Phiếu Thu Theo Thông Tư 99' : 'Mẫu Phiếu Chi Theo Thông Tư 99'}"></title>
     <style>
-        /* Cấu hình khổ giấy in A5 Ngang - Nới lề một chút (20mm) để có chỗ chứa font chữ lớn */
-        /* Sửa thành: */
+        /* Cấu hình khổ giấy in A5 Ngang - Thu hẹp lề một chút để cân đối với chữ nhỏ */
         @page {
             size: A5 landscape;
-            margin: 18mm 20mm 8mm 20mm;
-            /* Tăng lề trên lên 18mm để đẩy mọi thứ xuống */
+            margin: 8mm 15mm 6mm 15mm;
         }
 
         body {
             font-family: 'Times New Roman', 'DejaVu Sans', serif;
-            font-size: 19px;
-            /* Đặt font chữ nền tối thiểu là 18px cho mọi thành phần */
-            line-height: 1.5;
+            font-size: 10px; /* Đặt font chữ nền chủ đạo là 10px theo yêu cầu */
+            line-height: 1.35;
             color: #000;
             margin: 0;
             padding: 0;
@@ -26,7 +23,6 @@
         /* Khung bao bọc để bóp ngắn chiều ngang layout */
         .invoice-wrapper {
             width: 85%;
-            /* Tăng lên 85% để chữ to có không gian trải đều, không bị xuống dòng quá nhiều */
             margin: 0 auto;
             padding: 0;
         }
@@ -51,7 +47,7 @@
         .top-header-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 5px;
+            margin-bottom: 2px;
         }
 
         .top-header-table td {
@@ -60,20 +56,18 @@
         }
 
         .meta-text {
-            font-size: 18px;
-            /* Giữ cỡ chữ 18px cho phần mẫu số nhỏ bên góc phải */
+            font-size: 9.5px; /* Hạ nhẹ thông tin mẫu số thông tư xuống 9.5px */
         }
 
-        /* Tiêu đề chính Phiếu Chi */
+        /* Tiêu đề chính Phiếu Thu / Chi */
         .title-block {
             text-align: center;
-            margin-top: 8px;
-            margin-bottom: 4px;
+            margin-top: 4px;
+            margin-bottom: 1px;
         }
 
         .title-main {
-            font-size: 26px;
-            /* Tăng tiêu đề chính lên hẳn 26px để nổi bật */
+            font-size: 15px; /* Tiêu đề chính giữ mức 15px để cân đối với nền 10px */
             font-weight: bold;
             letter-spacing: 0.5px;
         }
@@ -82,224 +76,223 @@
         .accounting-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
 
         .accounting-table td {
-            padding: 2px 0;
+            padding: 1px 0;
         }
 
         /* Thiết kế các hàng nhập dữ liệu dạng dấu chấm */
         .content-data-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 12px;
+            margin-bottom: 6px;
         }
 
         .content-data-table td {
-            padding: 5px 0;
-            /* Tăng khoảng cách dòng cho thoáng khi chữ to */
+            padding: 3px 0; /* Tăng nhẹ một chút cho thoáng dòng */
             vertical-align: bottom;
         }
 
         .label-field {
             white-space: nowrap;
-            padding-right: 5px;
+            padding-right: 15px; /* Tăng khoảng cách từ chữ tiêu đề đến phần chấm */
         }
 
         .dots-field {
             border-bottom: 1px dotted #000;
             width: 100%;
-            padding-left: 5px;
+            padding-left: 20px; /* Đã sửa: Giúp text đổ từ DB (tx) cách xa tiêu đề */
         }
 
         /* Khu vực ký tên của 5 bộ phận chỉ định */
         .signature-block-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
+            margin-top: 4px;
             text-align: center;
         }
 
         .signature-block-table td {
             width: 20%;
             vertical-align: top;
-            padding: 2px;
+            padding: 1px;
         }
 
         .title-role {
             font-weight: bold;
-            font-size: 18px;
+            font-size: 10px;
         }
 
         .sub-role {
-            font-size: 15px;
-            /* Riêng dòng ghi chú nhỏ "(Ký, họ tên)" để 15px để cân đối với cột chữ 18px */
+            font-size: 8.5px; /* Dòng phụ "(Ký, họ tên)" hạ xuống 8.5px nhìn rất tinh tế */
             font-style: italic;
         }
 
         .spacing-for-sign {
-            height: 55px;
-            /* Tăng chiều cao khoảng trống ký tên lên 55px vì font chữ to hơn */
+            height: 38px; /* Hạ chiều cao vùng ký xuống 38px cho khớp tỷ lệ chữ nhỏ */
         }
 
         .name-printed {
             font-weight: bold;
-            font-size: 18px;
+            font-size: 10px;
         }
 
         /* Phần biên nhận tiền mặt ở cuối trang */
         .receipt-footer-section {
-            margin-top: 15px;
-            font-size: 18px;
+            margin-top: 8px;
+            font-size: 10px;
         }
 
         .receipt-footer-section p {
-            margin: 5px 0;
+            margin: 2px 0;
         }
 
         .note-section {
-            font-size: 15px;
-            /* Dòng ghi chú luật kế toán cuối trang để 15px */
-            margin-top: 8px;
+            font-size: 8.5px; /* Ghi chú nhỏ luật kế toán cuối trang */
+            margin-top: 4px;
         }
     </style>
 </head>
 
 <body>
 
-    <div class="invoice-wrapper">
+<div class="invoice-wrapper">
 
-        <table class="top-header-table">
-            <tr>
-                <td style="width: 50%;">
-                    <div><span class="bold">Đơn vị:</span> <span
-                            th:text="${companyName}">.......................................................</span>
-                    </div>
-                    <div><span class="bold">Địa chỉ:</span> <span
-                            th:text="${companyAddress}">.......................................................</span>
-                    </div>
-                </td>
-                <td style="width: 50%; text-align: center;" class="meta-text">
-                    <div class="bold" th:text="${tx != null && tx.type == 'INCOME' ? 'Mẫu số 01 - TT' : 'Mẫu số 02 - TT'}">Mẫu số 02 - TT</div>
-                    <div class="italic">(Kèm theo Thông tư số 99/2025/TT-BTC</div>
-                    <div class="italic">ngày 27 tháng 10 năm 2025 của Bộ trưởng Bộ Tài chính)</div>
-                </td>
-            </tr>
-        </table>
+    <table class="top-header-table">
+        <tr>
+            <td style="width: 50%;">
+                <div><span class="bold">Đơn vị:</span> <span
+                        th:text="${companyName}">.......................................................</span>
+                </div>
+                <div><span class="bold">Địa chỉ:</span> <span
+                        th:text="${companyAddress}">.......................................................</span>
+                </div>
+            </td>
+            <td style="width: 50%; text-align: center;" class="meta-text">
+                <div class="bold"
+                     th:text="${tx != null && tx.type == 'INCOME' ? 'Mẫu số 01 - TT' : 'Mẫu số 02 - TT'}"></div>
+                <div class="italic">(Kèm theo Thông tư số 99/2025/TT-BTC</div>
+                <div class="italic">ngày 27 tháng 10 năm 2025 của Bộ trưởng Bộ Tài chính)</div>
+            </td>
+        </tr>
+    </table>
 
-        <div class="title-block">
-            <div class="title-main" th:text="${tx != null && tx.type == 'INCOME' ? 'PHIẾU THU' : 'PHIẾU CHI'}">PHIẾU CHI</div>
-            <div class="italic">
-                Ngày <span th:text="${tx != null ? #dates.format(tx.transactionDate, 'dd') : '....'}">....</span>
-                tháng <span th:text="${tx != null ? #dates.format(tx.transactionDate, 'MM') : '....'}">....</span>
-                năm <span
-                    th:text="${tx != null ? #dates.format(tx.transactionDate, 'yyyy') : '........'}">........</span>
-            </div>
+    <div class="title-block">
+        <div class="title-main" th:text="${tx != null && tx.type == 'INCOME' ? 'PHIẾU THU' : 'PHIẾU CHI'}"></div>
+        <div class="italic">
+            Ngày <span th:text="${tx != null ? #dates.format(tx.transaction_date, 'dd') : '....'}">....</span>
+            tháng <span th:text="${tx != null ? #dates.format(tx.transaction_date, 'MM') : '....'}">....</span>
+            năm <span
+                th:text="${tx != null ? #dates.format(tx.transaction_date, 'yyyy') : '........'}">........</span>
         </div>
-
-        <table class="accounting-table">
-            <tr>
-                <td style="width: 50%;"></td>
-                <td style="width: 50%;" class="text-right">
-                    <div style="padding-right: 10px;">Quyển số: .....................................</div>
-                    <div style="padding-right: 10px;">Số: <span class="bold"
-                            th:text="${tx != null ? tx.transactionCode : '.....................................'}">.....................................</span>
-                    </div>
-                    <div style="padding-right: 10px;">Nợ: .....................................</div>
-                    <div style="padding-right: 10px;">Có: .....................................</div>
-                </td>
-            </tr>
-        </table>
-
-        <table class="content-data-table">
-            <tr>
-                <td class="label-field" th:text="${tx != null && tx.type == 'INCOME' ? 'Họ và tên người nộp tiền:' : 'Họ và tên người nhận tiền:'}">Họ và tên người nhận tiền:</td>
-                <td class="dots-field bold" th:text="${tx != null && tx.partner != null ? tx.partner.name : ''}"></td>
-            </tr>
-            <tr>
-                <td class="label-field">Địa chỉ:</td>
-                <td class="dots-field" th:text="${tx != null && tx.partner != null ? tx.partner.address : ''}"></td>
-            </tr>
-            <tr>
-                <td class="label-field" th:text="${tx != null && tx.type == 'INCOME' ? 'Lý do thu:' : 'Lý do chi:'}">Lý do chi:</td>
-                <td class="dots-field" th:text="${tx != null ? tx.reason : ''}"></td>
-            </tr>
-            <tr>
-                <td class="label-field">Số tiền:</td>
-                <td class="dots-field bold"
-                    th:text="${tx != null ? #numbers.formatDecimal(tx.amount, 0, 'COMMA', 0, 'POINT') + ' VND' : ''}">
-                </td>
-            </tr>
-            <tr>
-                <td class="label-field">(Viết bằng chữ):</td>
-                <td class="dots-field italic" th:text="${amountInWords}"></td>
-            </tr>
-            <tr>
-                <td class="label-field">Kèm theo:</td>
-                <td class="dots-field" th:text="${tx != null ? tx.accompaniedBy : ''}"></td>
-            </tr>
-            <tr>
-                <td class="label-field">Chứng từ gốc:</td>
-                <td class="dots-field" th:text="${tx != null ? tx.originalDocuments : ''}"></td>
-            </tr>
-        </table>
-
-        <div class="text-right italic" style="padding-right: 25px; margin-bottom: 4px;">
-            Ngày ...... tháng ...... năm ......
-        </div>
-
-        <table class="signature-block-table">
-            <tr>
-                <td class="title-role">Giám đốc</td>
-                <td class="title-role">Kế toán trưởng</td>
-                <td class="title-role">Thủ quỹ</td>
-                <td class="title-role">Người lập phiếu</td>
-                <td class="title-role" th:text="${tx != null && tx.type == 'INCOME' ? 'Người nộp tiền' : 'Người nhận tiền'}">Người nộp tiền</td>
-            </tr>
-            <tr>
-                <td class="sub-role">(Ký, họ tên, đóng dấu)</td>
-                <td class="sub-role">(Ký, họ tên)</td>
-                <td class="sub-role">(Ký, họ tên)</td>
-                <td class="sub-role">(Ký, họ tên)</td>
-                <td class="sub-role">(Ký, họ tên)</td>
-            </tr>
-            <tr class="spacing-for-sign">
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class="name-printed"></td>
-                <td class="name-printed"></td>
-                <td class="name-printed"></td>
-                <td class="name-printed" th:text="${tx != null && tx.user != null ? tx.user.fullName : ''}"></td>
-                <td class="name-printed" th:text="${tx != null && tx.partner != null ? tx.partner.name : ''}"></td>
-            </tr>
-        </table>
-
-        <div class="receipt-footer-section">
-            <p>Đã nhận đủ số tiền (viết bằng chữ):
-                ..................................................................................................................................
-            </p>
-            <p>+ Tỷ giá ngoại tệ (vàng bạc, đá quý):
-                ................................................................................................................................
-            </p>
-            <p>+ Số tiền quy đổi:
-                ..............................................................................................................................................................
-            </p>
-            <div class="italic" style="margin-top: 3px;">(Liên gửi ra ngoài phải đóng dấu)</div>
-        </div>
-
-        <div class="note-section italic">
-            Ghi chú: Tùy theo đặc điểm hoạt động sản xuất kinh doanh và yêu cầu quản lý của đơn vị mình, doanh nghiệp
-            được
-            xây dựng, thiết kế biểu mẫu chứng từ kế toán.
-        </div>
-
     </div>
+
+    <table class="accounting-table">
+        <tr>
+            <td style="width: 50%;"></td>
+            <td style="width: 50%;" class="text-right">
+                <div style="padding-right: 10px;">Quyển số: .....................................</div>
+                <div style="padding-right: 10px;">Số: <span class="bold"
+                                                            th:text="${tx != null ? tx.transaction_code : '.....................................'}">.....................................</span>
+                </div>
+                <div style="padding-right: 10px;">Nợ: .....................................</div>
+                <div style="padding-right: 10px;">Có: .....................................</div>
+            </td>
+        </tr>
+    </table>
+
+    <table class="content-data-table">
+        <tr>
+            <td class="label-field"
+                th:text="${tx != null && tx.type == 'INCOME' ? 'Họ và tên người nộp tiền:' : 'Họ và tên người nhận tiền:'}">
+                Họ và tên người nhận tiền:</td>
+            <td class="dots-field bold" th:text="${tx != null && tx.partner != null ? tx.partner.name : ''}"></td>
+        </tr>
+        <tr>
+            <td class="label-field">Địa chỉ:</td>
+            <td class="dots-field" th:text="${tx != null && tx.partner != null ? tx.partner.address : ''}"></td>
+        </tr>
+        <tr>
+            <td class="label-field" th:text="${tx != null && tx.type == 'INCOME' ? 'Lý do thu:' : 'Lý do chi:'}"></td>
+            <td class="dots-field" th:text="${tx != null ? tx.reason : ''}"></td>
+        </tr>
+        <tr>
+            <td class="label-field">Số tiền:</td>
+            <td class="dots-field bold"
+                th:text="${tx != null ? #numbers.formatDecimal(tx.amount, 0, 'COMMA', 0, 'POINT') + ' VND' : ''}">
+            </td>
+        </tr>
+        <tr>
+            <td class="label-field">(Viết bằng chữ):</td>
+            <td class="dots-field italic" th:text="${amountInWords}"></td>
+        </tr>
+        <tr>
+            <td class="label-field">Kèm theo:</td>
+            <td class="dots-field" th:text="${tx != null ? tx.accompaniedBy : ''}"></td>
+        </tr>
+        <tr>
+            <td class="label-field">Chứng từ gốc:</td>
+            <td class="dots-field" th:text="${tx != null ? tx.originalDocuments : ''}"></td>
+        </tr>
+    </table>
+
+    <div class="text-right italic" style="padding-right: 25px; margin-bottom: 2px;">
+        Ngày ...... tháng ...... năm ......
+    </div>
+
+    <table class="signature-block-table">
+        <tr>
+            <td class="title-role">Giám đốc</td>
+            <td class="title-role">Kế toán trưởng</td>
+            <td class="title-role">Thủ quỹ</td>
+            <td class="title-role">Người lập phiếu</td>
+            <td class="title-role"
+                th:text="${tx != null && tx.type == 'INCOME' ? 'Người nộp tiền' : 'Người nhận tiền'}">Người nhận tiền</td>
+        </tr>
+        <tr>
+            <td class="sub-role">(Ký, họ tên, đóng dấu)</td>
+            <td class="sub-role">(Ký, họ tên)</td>
+            <td class="sub-role">(Ký, họ tên)</td>
+            <td class="sub-role">(Ký, họ tên)</td>
+            <td class="sub-role">(Ký, họ tên)</td>
+        </tr>
+        <tr class="spacing-for-sign">
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td class="name-printed"></td>
+            <td class="name-printed"></td>
+            <td class="name-printed"></td>
+            <td class="name-printed" th:text="${tx != null && tx.user != null ? tx.user.fullName : ''}"></td>
+            <td class="name-printed" th:text="${tx != null && tx.partner != null ? tx.partner.name : ''}"></td>
+        </tr>
+    </table>
+
+    <div class="receipt-footer-section">
+        <p>Đã nhận đủ số tiền (viết bằng chữ):
+            ..................................................................................................................................
+        </p>
+        <p>+ Tỷ giá ngoại tệ (vàng bạc, đá quý):
+            ................................................................................................................................
+        </p>
+        <p>+ Số tiền quy đổi:
+            ..............................................................................................................................................................
+        </p>
+        <div class="italic" style="margin-top: 2px;">(Liên gửi ra ngoài phải đóng dấu)</div>
+    </div>
+
+    <div class="note-section italic">
+        Ghi chú: Tùy theo đặc điểm hoạt động sản xuất kinh doanh và yêu cầu quản lý của đơn vị mình, doanh nghiệp
+        được xây dựng, thiết kế biểu mẫu chứng từ kế toán.
+    </div>
+
+</div>
 
 </body>
 

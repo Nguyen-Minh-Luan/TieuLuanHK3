@@ -13,12 +13,13 @@ import java.nio.charset.StandardCharsets;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/pdf")
 public class VoucherController {
 
         private final PdfExportService pdfExportService;
         private final TransactionRepository transactionRepository;
 
-        @GetMapping("/transactions/{id}/export/pdf")
+        @GetMapping("/transactions/{id}")
         public ResponseEntity<byte[]> exportVoucherPdf(@PathVariable Long id) {
                 Transaction tx = transactionRepository.findById(id)
                                 .orElseThrow(() -> new RuntimeException("Không tìm thấy Giao dịch với ID: " + id));
