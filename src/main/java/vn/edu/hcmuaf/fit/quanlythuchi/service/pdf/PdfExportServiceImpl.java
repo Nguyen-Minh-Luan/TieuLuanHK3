@@ -11,12 +11,15 @@ import vn.edu.hcmuaf.fit.quanlythuchi.entity.Transaction;
 import vn.edu.hcmuaf.fit.quanlythuchi.repository.TransactionRepository;
 import vn.edu.hcmuaf.fit.quanlythuchi.util.MoneyToWordsConverter;
 
+import org.jsoup.Jsoup;
+import org.jsoup.helper.W3CDom;
+import org.jsoup.nodes.Document;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 @Service
 @RequiredArgsConstructor
-public class PdfExportServiceImpl implements PdfExportService {
+public class    PdfExportServiceImpl implements PdfExportService {
 
     private final TransactionRepository transactionRepository;
     private final TemplateEngine templateEngine;
@@ -29,54 +32,47 @@ public class PdfExportServiceImpl implements PdfExportService {
 
     @Override
     public byte[] generateVoucher(Long transactionId) {
-        // 1. Fetch transaction
         Transaction transaction = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy Giao dịch với ID: " + transactionId));
 
-        // 2. Build Thymeleaf context
         Context context = new Context();
         context.setVariable("tx", transaction);
         context.setVariable("companyName", companyName);
         context.setVariable("companyAddress", companyAddress);
 
-        // Convert amount to words
         long amountVal = transaction.getAmount() != null ? transaction.getAmount().longValue() : 0L;
-        String amountInWords = MoneyToWordsConverter.convert(amountVal);
-        context.setVariable("amountInWords", amountInWords);
+        context.setVariable("amountInWords", MoneyToWordsConverter.convert(amountVal));
 
-        // 3. Process Thymeleaf template to HTML String
         String htmlContent = templateEngine.process("PrintTransaction", context);
 
-        // 4. Determine baseUri safely
+        // ✅ FIX: Dùng Jsoup parse HTML bình thường → convert sang XHTML hợp lệ
+        // Jsoup tự xử lý escape & và các ký tự đặc biệt khác
+        Document jsoupDoc = Jsoup.parse(htmlContent);
+        jsoupDoc.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
+        String xhtmlContent = jsoupDoc.outerHtml();
+
         String baseUri = "";
         try {
             java.net.URL resource = PdfExportServiceImpl.class.getResource("/");
-            if (resource != null) {
-                baseUri = resource.toExternalForm();
-            }
-        } catch (Exception e) {
-            // Ignore and fallback to empty baseUri
-        }
+            if (resource != null) baseUri = resource.toExternalForm();
+        } catch (Exception ignored) {}
 
-        // 5. Render to PDF using OpenHTMLToPDF
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             PdfRendererBuilder builder = new PdfRendererBuilder();
             builder.useFastMode();
-
-            // Programmatically register the Times New Roman font for standard, bold, italic, bold-italic styles
-            builder.useFont(() -> PdfExportServiceImpl.class.getResourceAsStream("/times.ttf"), 
+            builder.useFont(() -> PdfExportServiceImpl.class.getResourceAsStream("/times.ttf"),
                     "Times New Roman", 400, BaseRendererBuilder.FontStyle.NORMAL, true);
-            builder.useFont(() -> PdfExportServiceImpl.class.getResourceAsStream("/times.ttf"), 
+            builder.useFont(() -> PdfExportServiceImpl.class.getResourceAsStream("/times.ttf"),
                     "Times New Roman", 700, BaseRendererBuilder.FontStyle.NORMAL, true);
-            builder.useFont(() -> PdfExportServiceImpl.class.getResourceAsStream("/times.ttf"), 
+            builder.useFont(() -> PdfExportServiceImpl.class.getResourceAsStream("/times.ttf"),
                     "Times New Roman", 400, BaseRendererBuilder.FontStyle.ITALIC, true);
-            builder.useFont(() -> PdfExportServiceImpl.class.getResourceAsStream("/times.ttf"), 
+            builder.useFont(() -> PdfExportServiceImpl.class.getResourceAsStream("/times.ttf"),
                     "Times New Roman", 700, BaseRendererBuilder.FontStyle.ITALIC, true);
 
-            builder.withHtmlContent(htmlContent, baseUri);
+            // ✅ Dùng xhtmlContent đã được Jsoup làm sạch thay vì htmlContent gốc
+            builder.withHtmlContent(xhtmlContent, baseUri);
             builder.toStream(baos);
             builder.run();
-
             return baos.toByteArray();
         } catch (IOException e) {
             throw new RuntimeException("Lỗi ghi xuất luồng dữ liệu PDF", e);
