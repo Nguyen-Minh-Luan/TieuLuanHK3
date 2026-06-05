@@ -30,6 +30,7 @@ public class PartnerServiceImpl implements PartnerService {
         partner.setName(request.getName());
         partner.setType(request.getType());
         partner.setEmail(request.getEmail());
+        partner.setAddress(request.getAddress());
 
         // Mặc định khi tạo mới thì isDeleted = false
         partner.setIsDeleted(false);
@@ -85,6 +86,10 @@ public class PartnerServiceImpl implements PartnerService {
             partner.setType(request.getType());
         }
 
+        if (request.getAddress() != null) {
+            partner.setAddress(request.getAddress());
+        }
+
         return toDTO(partnerRepository.save(partner));
     }
 
@@ -109,6 +114,7 @@ public class PartnerServiceImpl implements PartnerService {
                 .name(partner.getName())
                 .type(partner.getType())
                 .email(partner.getEmail())
+                .address(partner.getAddress())
                 .build();
     }
 }

@@ -12,4 +12,5 @@ public class PartnerDTO {
     private String name;
     private String type;
     private String email;
+    private String address;
 }

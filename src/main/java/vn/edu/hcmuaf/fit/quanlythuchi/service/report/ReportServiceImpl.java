@@ -4,11 +4,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.ReportDTO;
+import vn.edu.hcmuaf.fit.quanlythuchi.dto.TransactionDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.Report;
+import vn.edu.hcmuaf.fit.quanlythuchi.entity.Transaction;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.User;
 import vn.edu.hcmuaf.fit.quanlythuchi.repository.ReportRepository;
 import vn.edu.hcmuaf.fit.quanlythuchi.repository.UserRepository;
+import vn.edu.hcmuaf.fit.quanlythuchi.service.transaction.TransactionService;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,7 +23,7 @@ public class ReportServiceImpl implements ReportService {
 
     private final ReportRepository reportRepository;
     private final UserRepository userRepository;
-
+    private final TransactionService transactionService;
     // ──────────────────────────────────────────────────────────────
     //  TẠO BÁO CÁO MỚI
     // ──────────────────────────────────────────────────────────────
@@ -34,10 +38,11 @@ public class ReportServiceImpl implements ReportService {
                         "Không tìm thấy người dùng với ID: " + request.getCreatedBy()));
 
         // Tự động tính số liệu từ transactions
-        double totalIncome  = safeDouble(reportRepository.sumIncomeByDateRange(request.getFromDate(), request.getToDate()));
-        double totalExpense = safeDouble(reportRepository.sumExpenseByDateRange(request.getFromDate(), request.getToDate()));
-        double netBalance   = totalIncome - totalExpense;
-
+        Double totalIncome  = safeDouble(reportRepository.sumIncomeByDateRange(request.getFromDate(), request.getToDate()));
+        System.out.println(totalIncome);
+        Double totalExpense = safeDouble(reportRepository.sumExpenseByDateRange(request.getFromDate(), request.getToDate()));
+        System.out.println(totalExpense);
+        Double netBalance   = totalIncome-totalExpense;
         Report report = new Report();
         report.setTitle(request.getTitle());
         report.setType(request.getType().toUpperCase());
@@ -53,7 +58,7 @@ public class ReportServiceImpl implements ReportService {
         report.setUpdatedAt(new Date());
         report.setIsDeleted(false);
 
-        return toDTO(reportRepository.save(report));
+        return toDTO(reportRepository.save(report),false);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -93,15 +98,15 @@ public class ReportServiceImpl implements ReportService {
         }
 
         if (dateChanged) {
-            double totalIncome  = safeDouble(reportRepository.sumIncomeByDateRange(report.getFromDate(), report.getToDate()));
-            double totalExpense = safeDouble(reportRepository.sumExpenseByDateRange(report.getFromDate(), report.getToDate()));
+            Double totalIncome  = safeDouble(reportRepository.sumIncomeByDateRange(report.getFromDate(), report.getToDate()));
+            Double totalExpense = safeDouble(reportRepository.sumExpenseByDateRange(report.getFromDate(), report.getToDate()));
             report.setTotalIncome(totalIncome);
             report.setTotalExpense(totalExpense);
-            report.setNetBalance(totalIncome - totalExpense);
+            report.setNetBalance(totalIncome-totalExpense);
         }
 
         report.setUpdatedAt(new Date());
-        return toDTO(reportRepository.save(report));
+        return toDTO(reportRepository.save(report),false);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -121,7 +126,7 @@ public class ReportServiceImpl implements ReportService {
     // ──────────────────────────────────────────────────────────────
     @Override
     public ReportDTO getReportById(Long id) {
-        return toDTO(findActiveReport(id));
+        return toDTO(findActiveReport(id),true);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -130,19 +135,19 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public List<ReportDTO> getAllReports() {
         return reportRepository.findByIsDeletedFalse()
-                .stream().map(this::toDTO).collect(Collectors.toList());
+                .stream().map(report -> toDTO(report,false)).collect(Collectors.toList());
     }
 
     @Override
     public List<ReportDTO> getReportsByType(String type) {
         return reportRepository.findByTypeAndIsDeletedFalse(type.toUpperCase())
-                .stream().map(this::toDTO).collect(Collectors.toList());
+                .stream().map(report -> toDTO(report,false)).collect(Collectors.toList());
     }
 
     @Override
     public List<ReportDTO> getReportsByUser(Long userId) {
         return reportRepository.findByCreatedBy_IdAndIsDeletedFalse(userId)
-                .stream().map(this::toDTO).collect(Collectors.toList());
+                .stream().map(r -> toDTO(r, false)).collect(Collectors.toList());
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -153,15 +158,15 @@ public class ReportServiceImpl implements ReportService {
     public ReportDTO recalculate(Long id) {
         Report report = findActiveReport(id);
 
-        double totalIncome  = safeDouble(reportRepository.sumIncomeByDateRange(report.getFromDate(), report.getToDate()));
-        double totalExpense = safeDouble(reportRepository.sumExpenseByDateRange(report.getFromDate(), report.getToDate()));
+        Double totalIncome  = safeDouble(reportRepository.sumIncomeByDateRange(report.getFromDate(), report.getToDate()));
+        Double totalExpense = safeDouble(reportRepository.sumExpenseByDateRange(report.getFromDate(), report.getToDate()));
 
         report.setTotalIncome(totalIncome);
         report.setTotalExpense(totalExpense);
-        report.setNetBalance(totalIncome - totalExpense);
+        report.setNetBalance(totalIncome-totalExpense);
         report.setUpdatedAt(new Date());
 
-        return toDTO(reportRepository.save(report));
+        return toDTO(reportRepository.save(report),true);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -191,12 +196,12 @@ public class ReportServiceImpl implements ReportService {
         }
     }
 
-    private double safeDouble(Double value) {
+    private Double safeDouble(Double value) {
         return value != null ? value : 0.0;
     }
 
-    private ReportDTO toDTO(Report report) {
-        return ReportDTO.builder()
+    private ReportDTO toDTO(Report report, boolean isIncludeDetails) {
+        ReportDTO dto = ReportDTO.builder()
                 .id(report.getId())
                 .title(report.getTitle())
                 .type(report.getType())
@@ -211,5 +216,19 @@ public class ReportServiceImpl implements ReportService {
                 .createdAt(report.getCreatedAt())
                 .updatedAt(report.getUpdatedAt())
                 .build();
+
+        if (isIncludeDetails && report.getFromDate() != null && report.getToDate() != null) {
+            List<Transaction> txEntities =
+                    reportRepository.findTransactionsByDateRange(report.getFromDate(), report.getToDate());
+
+            List<TransactionDTO> txDTOs = txEntities.stream()
+                    .map(transactionService::toDTO)
+                    .collect(Collectors.toList());
+
+            dto.setTransactions(txDTOs);
+            dto.setTransactionCount(txDTOs.size());
+        }
+
+        return dto;
     }
 }

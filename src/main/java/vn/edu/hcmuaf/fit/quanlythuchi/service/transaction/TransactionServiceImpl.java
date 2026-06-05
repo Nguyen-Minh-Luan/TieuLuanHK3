@@ -77,6 +77,9 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setType(request.getType().toUpperCase());
         transaction.setAmount(request.getAmount());
         transaction.setNote(request.getNote());
+        transaction.setReason(request.getReason());
+        transaction.setAccompaniedBy(request.getAccompaniedBy());
+        transaction.setOriginalDocuments(request.getOriginalDocuments());
 
         // Tạo mã giao dịch ngẫu nhiên
         transaction.setTransaction_code("TXN-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
@@ -152,6 +155,9 @@ public class TransactionServiceImpl implements TransactionService {
         newTx.setType(newRequest.getType() != null ? newRequest.getType().toUpperCase() : oldTx.getType());
         newTx.setAmount(newRequest.getAmount() != null ? newRequest.getAmount() : oldTx.getAmount());
         newTx.setNote(newRequest.getNote() != null ? newRequest.getNote() : oldTx.getNote());
+        newTx.setReason(newRequest.getReason() != null ? newRequest.getReason() : oldTx.getReason());
+        newTx.setAccompaniedBy(newRequest.getAccompaniedBy() != null ? newRequest.getAccompaniedBy() : oldTx.getAccompaniedBy());
+        newTx.setOriginalDocuments(newRequest.getOriginalDocuments() != null ? newRequest.getOriginalDocuments() : oldTx.getOriginalDocuments());
 
         // Xử lý các trường thời gian và mã giao dịch
         newTx.setTransaction_code("TXN-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
@@ -256,7 +262,7 @@ public class TransactionServiceImpl implements TransactionService {
         }
     }
 
-    private TransactionDTO toDTO(Transaction tx) {
+    public TransactionDTO toDTO(Transaction tx) {
         return TransactionDTO.builder()
                 .parentId(tx.getParentId() != null ? tx.getParentId() : null)
                 .fundId(tx.getFund() != null ? tx.getFund().getId() : null)
@@ -271,6 +277,9 @@ public class TransactionServiceImpl implements TransactionService {
                 .transactionDate(tx.getTransaction_date())
                 .createdAt(tx.getCreated_at())
                 .hasWarning(tx.getHasWarning())
+                .reason(tx.getReason())
+                .accompaniedBy(tx.getAccompaniedBy())
+                .originalDocuments(tx.getOriginalDocuments())
                 .build();
     }
 }
