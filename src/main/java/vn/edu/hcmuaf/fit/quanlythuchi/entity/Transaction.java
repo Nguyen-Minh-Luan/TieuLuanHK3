@@ -45,4 +45,8 @@ public class Transaction {
     private String originalDocuments;
     @Column(name = "has_warning")
     private Boolean hasWarning = false;
+    /** null = giao dịch thường, not null = phiếu đang thanh toán khoản nợ này */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "debt_id")
+    private Debt debt;
 }

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.DebtDTO;
+import vn.edu.hcmuaf.fit.quanlythuchi.dto.TransactionDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.*;
 import vn.edu.hcmuaf.fit.quanlythuchi.repository.*;
 
@@ -20,6 +21,7 @@ public class DebtServiceImpl implements DebtService {
     private final PartnerRepository partnerRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
+    private final TransactionRepository transactionRepository; // Inject thẳng repo, tránh circular dependency
 
     // ──────────────────────────────────────────────────────────────
     //  TẠO KHOẢN NỢ MỚI
@@ -138,7 +140,18 @@ public class DebtServiceImpl implements DebtService {
     // ──────────────────────────────────────────────────────────────
     @Override
     public DebtDTO getDebtById(Long id) {
-        return toDTO(findActiveDebt(id));
+        Debt debt = findActiveDebt(id);
+        DebtDTO dto = toDTO(debt);
+
+        // Populate lịch sử thanh toán — chỉ cho GET /debts/{id}
+        List<TransactionDTO> payments = transactionRepository
+                .findByDebt_IdAndStatus(id, "ACTIVE")
+                .stream()
+                .map(this::toTransactionDTO)
+                .collect(Collectors.toList());
+        dto.setPayments(payments);
+
+        return dto;
     }
 
     @Override
@@ -249,6 +262,26 @@ public class DebtServiceImpl implements DebtService {
             throw new IllegalArgumentException(
                     "Loại nợ không hợp lệ: '" + debtType + "'. Chỉ chấp nhận RECEIVABLE hoặc PAYABLE.");
         }
+    }
+
+    /** Map Transaction entity → TransactionDTO (dùng để populate payments trong DebtDTO) */
+    private TransactionDTO toTransactionDTO(Transaction tx) {
+        return TransactionDTO.builder()
+                .parentId(tx.getParentId())
+                .fundId(tx.getFund() != null ? tx.getFund().getId() : null)
+                .categoryId(tx.getCategories() != null ? tx.getCategories().getId() : null)
+                .userId(tx.getUser() != null ? tx.getUser().getId() : null)
+                .partnerId(tx.getPartner() != null ? tx.getPartner().getId() : null)
+                .type(tx.getType())
+                .status(tx.getStatus())
+                .amount(tx.getAmount())
+                .note(tx.getNote())
+                .transactionCode(tx.getTransaction_code())
+                .transactionDate(tx.getTransaction_date())
+                .createdAt(tx.getCreated_at())
+                .reason(tx.getReason())
+                .debtId(tx.getDebt() != null ? tx.getDebt().getId() : null)
+                .build();
     }
 
     private DebtDTO toDTO(Debt debt) {

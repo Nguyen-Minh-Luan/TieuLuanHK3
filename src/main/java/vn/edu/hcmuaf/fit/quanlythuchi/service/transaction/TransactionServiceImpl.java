@@ -25,6 +25,7 @@ public class TransactionServiceImpl implements TransactionService {
     private final PartnerRepository partnerRepository;
     private final DebtRepository debtRepository;
     private final DebtService debtService;
+
     @Override
     @Transactional
     public TransactionDTO createTransaction(TransactionDTO request) {
@@ -38,7 +39,8 @@ public class TransactionServiceImpl implements TransactionService {
 
         // 2. Lấy Fund và kiểm tra ngoại lệ nếu không tồn tại
         Fund fund = fundRepository.findById(request.getFundId())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy Nguồn tiền (Fund) với ID: " + request.getFundId()));
+                .orElseThrow(
+                        () -> new RuntimeException("Không tìm thấy Nguồn tiền (Fund) với ID: " + request.getFundId()));
 
         // 3. Xử lý logic cộng trừ số dư (Tuần tự, không đệ quy)
         Double currentBalance = fund.getCurrentBalance() != null ? fund.getCurrentBalance() : 0.0;
@@ -60,17 +62,21 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setFund(fund);
         // Lấy và gắn Category (Bắt buộc)
         Category category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy Hạng mục (Category) với ID: " + request.getCategoryId()));
+                .orElseThrow(() -> new RuntimeException(
+                        "Không tìm thấy Hạng mục (Category) với ID: " + request.getCategoryId()));
         transaction.setCategories(category);
         // Lấy và gắn User (Bắt buộc - Người thực hiện giao dịch)
         User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy Người dùng (User) với ID: " + request.getUserId()));
+                .orElseThrow(
+                        () -> new RuntimeException("Không tìm thấy Người dùng (User) với ID: " + request.getUserId()));
         transaction.setUser(user);
 
-        // Lấy và gắn Partner (KHÔNG bắt buộc - Chỉ query khi client có gửi lên partnerId)
+        // Lấy và gắn Partner (KHÔNG bắt buộc - Chỉ query khi client có gửi lên
+        // partnerId)
         if (request.getPartnerId() != null) {
             Partner partner = partnerRepository.findById(request.getPartnerId())
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy Đối tác (Partner) với ID: " + request.getPartnerId()));
+                    .orElseThrow(() -> new RuntimeException(
+                            "Không tìm thấy Đối tác (Partner) với ID: " + request.getPartnerId()));
             transaction.setPartner(partner);
         }
 
@@ -92,10 +98,8 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setStatus("ACTIVE");
         transaction.setHasWarning(request.getHasWarning());
 
-        // Lưu giao dịch vào DB
-        Transaction savedTransaction = transactionRepository.save(transaction);
-
-        // ── TÍCH HỢP NỢ: Kiểm tra và cập nhật khoản nợ (nếu phiếu này đang thanh toán cho một khoản nợ) ──
+        // ── TÍCH HỢP NỢ: Kiểm tra và cập nhật khoản nợ (nếu phiếu này đang thanh toán
+        // cho một khoản nợ) ──
         if (request.getDebtId() != null) {
             Debt debt = debtRepository.findByIdAndIsDeletedFalse(request.getDebtId())
                     .orElseThrow(() -> new RuntimeException(
@@ -103,19 +107,28 @@ public class TransactionServiceImpl implements TransactionService {
 
             // Validation: Chiều giao dịch phải khớp với loại nợ
             // - Nợ RECEIVABLE (khách nợ mình) → thu về khi khách trả → loại phải là INCOME
-            // - Nợ PAYABLE (mình nợ)          → chi trả khi trả nợ  → loại phải là EXPENSE
-            boolean isValidDirection =
-                    ("RECEIVABLE".equals(debt.getDebtType()) && "INCOME".equalsIgnoreCase(request.getType())) ||
-                    ("PAYABLE".equals(debt.getDebtType())    && "EXPENSE".equalsIgnoreCase(request.getType()));
+            // - Nợ PAYABLE (mình nợ) → chi trả khi trả nợ → loại phải là EXPENSE
+            boolean isValidDirection = ("RECEIVABLE".equals(debt.getDebtType())
+                    && "INCOME".equalsIgnoreCase(request.getType())) ||
+                    ("PAYABLE".equals(debt.getDebtType()) && "EXPENSE".equalsIgnoreCase(request.getType()));
 
             if (!isValidDirection) {
                 throw new RuntimeException(
                         "Loại giao dịch không khớp với loại nợ! " +
-                        "Nợ RECEIVABLE phải dùng phiếu THU (INCOME). " +
-                        "Nợ PAYABLE phải dùng phiếu CHI (EXPENSE).");
+                                "Nợ RECEIVABLE phải dùng phiếu THU (INCOME). " +
+                                "Nợ PAYABLE phải dùng phiếu CHI (EXPENSE).");
             }
 
-            // Gọi applyPayment() — nằm trong cùng @Transactional, nên nếu lỗi sẽ rollback toàn bộ
+            // Gắn FK vào transaction để lưu vào DB (phải làm TRƯỚC khi save)
+            transaction.setDebt(debt);
+        }
+
+        // Lưu giao dịch vào DB (đã có debt_id nếu có)
+        Transaction savedTransaction = transactionRepository.save(transaction);
+
+        // Cập nhật paidAmount trên Debt — gọi sau save để transaction đã tồn tại trong
+        // DB
+        if (request.getDebtId() != null) {
             debtService.applyPayment(request.getDebtId(), request.getAmount());
         }
 
@@ -128,6 +141,13 @@ public class TransactionServiceImpl implements TransactionService {
         // Lấy giao dịch cũ lên
         Transaction oldTx = transactionRepository.findById(oldId)
                 .orElseThrow(() -> new RuntimeException("Giao dịch không tồn tại"));
+
+        // Không cho phép cập nhật phiếu đã liên kết với khoản nợ
+        if (oldTx.getDebt() != null) {
+            throw new RuntimeException(
+                    "Không thể cập nhật phiếu đã liên kết với khoản nợ (Debt ID: " +
+                            oldTx.getDebt().getId() + "). Hãy hủy phiếu và tạo phiếu mới.");
+        }
 
         // 1. HOÀN TÁC SỐ DƯ CỦA GIAO DỊCH CŨ (Trên Fund cũ)
         Fund oldFund = oldTx.getFund();
@@ -148,20 +168,25 @@ public class TransactionServiceImpl implements TransactionService {
 
         // --- Bắt đầu set các trường từ Request ---
 
-        // Lấy và gắn Nguồn tiền (Có thể là Fund cũ, hoặc Fund mới nếu người dùng chọn đổi Nguồn tiền)
+        // Lấy và gắn Nguồn tiền (Có thể là Fund cũ, hoặc Fund mới nếu người dùng chọn
+        // đổi Nguồn tiền)
         Fund targetFund = oldFund;
-        // Kiểm tra: Nếu client có gửi fundId lên VÀ fundId đó khác với quỹ cũ thì mới query DB
+        // Kiểm tra: Nếu client có gửi fundId lên VÀ fundId đó khác với quỹ cũ thì mới
+        // query DB
         if (newRequest.getFundId() != null && !oldFund.getId().equals(newRequest.getFundId())) {
             targetFund = fundRepository.findById(newRequest.getFundId())
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy Nguồn tiền (Fund) mới với ID: " + newRequest.getFundId()));
+                    .orElseThrow(() -> new RuntimeException(
+                            "Không tìm thấy Nguồn tiền (Fund) mới với ID: " + newRequest.getFundId()));
         }
         newTx.setFund(targetFund);
 
         // 2. Lấy và gắn Category
         Category category = oldTx.getCategories(); // Mặc định giữ lại hạng mục cũ
-        if (newRequest.getCategoryId() != null && (category == null || !category.getId().equals(newRequest.getCategoryId()))) {
+        if (newRequest.getCategoryId() != null
+                && (category == null || !category.getId().equals(newRequest.getCategoryId()))) {
             category = categoryRepository.findById(newRequest.getCategoryId())
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy Hạng mục với ID: " + newRequest.getCategoryId()));
+                    .orElseThrow(() -> new RuntimeException(
+                            "Không tìm thấy Hạng mục với ID: " + newRequest.getCategoryId()));
         }
         newTx.setCategories(category);
 
@@ -169,15 +194,18 @@ public class TransactionServiceImpl implements TransactionService {
         User user = oldTx.getUser(); // Mặc định giữ lại user cũ
         if (newRequest.getUserId() != null && (user == null || !user.getId().equals(newRequest.getUserId()))) {
             user = userRepository.findById(newRequest.getUserId())
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy Người dùng với ID: " + newRequest.getUserId()));
+                    .orElseThrow(
+                            () -> new RuntimeException("Không tìm thấy Người dùng với ID: " + newRequest.getUserId()));
         }
         newTx.setUser(user);
 
         // 4. Lấy và gắn Partner
         Partner partner = oldTx.getPartner(); // Mặc định giữ lại partner cũ
-        if (newRequest.getPartnerId() != null && (partner == null || !partner.getId().equals(newRequest.getPartnerId()))) {
+        if (newRequest.getPartnerId() != null
+                && (partner == null || !partner.getId().equals(newRequest.getPartnerId()))) {
             partner = partnerRepository.findById(newRequest.getPartnerId())
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy Đối tác với ID: " + newRequest.getPartnerId()));
+                    .orElseThrow(
+                            () -> new RuntimeException("Không tìm thấy Đối tác với ID: " + newRequest.getPartnerId()));
         }
         newTx.setPartner(partner);
 
@@ -186,8 +214,10 @@ public class TransactionServiceImpl implements TransactionService {
         newTx.setAmount(newRequest.getAmount() != null ? newRequest.getAmount() : oldTx.getAmount());
         newTx.setNote(newRequest.getNote() != null ? newRequest.getNote() : oldTx.getNote());
         newTx.setReason(newRequest.getReason() != null ? newRequest.getReason() : oldTx.getReason());
-        newTx.setAccompaniedBy(newRequest.getAccompaniedBy() != null ? newRequest.getAccompaniedBy() : oldTx.getAccompaniedBy());
-        newTx.setOriginalDocuments(newRequest.getOriginalDocuments() != null ? newRequest.getOriginalDocuments() : oldTx.getOriginalDocuments());
+        newTx.setAccompaniedBy(
+                newRequest.getAccompaniedBy() != null ? newRequest.getAccompaniedBy() : oldTx.getAccompaniedBy());
+        newTx.setOriginalDocuments(newRequest.getOriginalDocuments() != null ? newRequest.getOriginalDocuments()
+                : oldTx.getOriginalDocuments());
 
         // Xử lý các trường thời gian và mã giao dịch
         newTx.setTransaction_code("TXN-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
@@ -216,6 +246,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         return toDTO(transactionRepository.save(newTx));
     }
+
     @Override
     @Transactional
     public void cancelTransaction(Long txId) {
@@ -239,10 +270,23 @@ public class TransactionServiceImpl implements TransactionService {
             fund.setCurrentBalance(fund.getCurrentBalance() + tx.getAmount());
         }
 
-        // 5. Lưu thay đổi
+        // 5. Hoàn tác paidAmount trên Debt (nếu phiếu này có liên kết khoản nợ)
+        if (tx.getDebt() != null) {
+            Debt debt = tx.getDebt();
+            double newPaid = (debt.getPaidAmount() != null ? debt.getPaidAmount() : 0.0) - tx.getAmount();
+            debt.setPaidAmount(Math.max(newPaid, 0.0));
+            // Nếu đã đánh dấu isPaid thì reset lại
+            debt.setIsPaid(false);
+            debt.setPaymentDate(null);
+            debt.setUpdatedAt(new Date());
+            debtRepository.save(debt);
+        }
+
+        // 6. Lưu thay đổi
         fundRepository.save(fund);
         transactionRepository.save(tx);
     }
+
     @Override
     public TransactionDTO getTransactionById(Long id) {
         return toDTO(transactionRepository.findById(id)
@@ -256,6 +300,7 @@ public class TransactionServiceImpl implements TransactionService {
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
+
     @Override
     public Double getTotalIncome() {
         try {
@@ -310,6 +355,7 @@ public class TransactionServiceImpl implements TransactionService {
                 .reason(tx.getReason())
                 .accompaniedBy(tx.getAccompaniedBy())
                 .originalDocuments(tx.getOriginalDocuments())
+                .debtId(tx.getDebt() != null ? tx.getDebt().getId() : null)
                 .build();
     }
 }

@@ -55,4 +55,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
                     "  AND MONTH(t.transaction_date) = MONTH(NOW())",
             nativeQuery = true)
     Double getCurrentMonthTotalByCategory(@Param("categoryId") Long categoryId);
+
+    /** Lấy tất cả phiếu thu/chi đã thanh toán cho một khoản nợ theo trạng thái */
+    List<Transaction> findByDebt_IdAndStatus(Long debtId, String status);
 }
