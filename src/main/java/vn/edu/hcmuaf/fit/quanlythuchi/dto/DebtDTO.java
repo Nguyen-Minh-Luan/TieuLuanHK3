@@ -2,6 +2,7 @@ package vn.edu.hcmuaf.fit.quanlythuchi.dto;
 
 import lombok.*;
 import java.util.Date;
+import java.util.List;
 
 @Getter
 @Setter
@@ -34,4 +35,7 @@ public class DebtDTO {
 
     // Số tiền còn phải trả/thu = totalAmount - paidAmount
     private Double remainingAmount;
+
+    // Lịch sử thanh toán — chỉ populate khi GET /debts/{id}
+    private List<TransactionDTO> payments;
 }
