@@ -31,7 +31,7 @@ public class Transaction {
     private Long parentId;
     private String transaction_code;
     private Date transaction_date;
-    private String type;
+    private String type;// có 4 loại là INCOME, EXPENSE, INCOME_DEBT, EXPENSE_DEBT
     private Double amount;
     private String amountInWord;
     private String note;

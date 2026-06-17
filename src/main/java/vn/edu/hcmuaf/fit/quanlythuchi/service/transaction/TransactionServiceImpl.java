@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.TransactionDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.*;
 import vn.edu.hcmuaf.fit.quanlythuchi.repository.*;
+import vn.edu.hcmuaf.fit.quanlythuchi.service.debt.DebtService;
 import vn.edu.hcmuaf.fit.quanlythuchi.service.transaction.TransactionService;
 
 import java.util.Date;
@@ -22,6 +23,8 @@ public class TransactionServiceImpl implements TransactionService {
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final PartnerRepository partnerRepository;
+    private final DebtRepository debtRepository;
+    private final DebtService debtService;
     @Override
     @Transactional
     public TransactionDTO createTransaction(TransactionDTO request) {
@@ -89,7 +92,34 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setStatus("ACTIVE");
         transaction.setHasWarning(request.getHasWarning());
 
-        return toDTO(transactionRepository.save(transaction));
+        // Lưu giao dịch vào DB
+        Transaction savedTransaction = transactionRepository.save(transaction);
+
+        // ── TÍCH HỢP NỢ: Kiểm tra và cập nhật khoản nợ (nếu phiếu này đang thanh toán cho một khoản nợ) ──
+        if (request.getDebtId() != null) {
+            Debt debt = debtRepository.findByIdAndIsDeletedFalse(request.getDebtId())
+                    .orElseThrow(() -> new RuntimeException(
+                            "Không tìm thấy khoản nợ với ID: " + request.getDebtId()));
+
+            // Validation: Chiều giao dịch phải khớp với loại nợ
+            // - Nợ RECEIVABLE (khách nợ mình) → thu về khi khách trả → loại phải là INCOME
+            // - Nợ PAYABLE (mình nợ)          → chi trả khi trả nợ  → loại phải là EXPENSE
+            boolean isValidDirection =
+                    ("RECEIVABLE".equals(debt.getDebtType()) && "INCOME".equalsIgnoreCase(request.getType())) ||
+                    ("PAYABLE".equals(debt.getDebtType())    && "EXPENSE".equalsIgnoreCase(request.getType()));
+
+            if (!isValidDirection) {
+                throw new RuntimeException(
+                        "Loại giao dịch không khớp với loại nợ! " +
+                        "Nợ RECEIVABLE phải dùng phiếu THU (INCOME). " +
+                        "Nợ PAYABLE phải dùng phiếu CHI (EXPENSE).");
+            }
+
+            // Gọi applyPayment() — nằm trong cùng @Transactional, nên nếu lỗi sẽ rollback toàn bộ
+            debtService.applyPayment(request.getDebtId(), request.getAmount());
+        }
+
+        return toDTO(savedTransaction);
     }
 
     @Override

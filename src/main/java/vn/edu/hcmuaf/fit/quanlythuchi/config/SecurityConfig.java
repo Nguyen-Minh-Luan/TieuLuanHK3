@@ -24,7 +24,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/auth/user").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/auth/user/*").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/auth/user/*").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/transactions/*/export/pdf").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/pdf/transactions/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/pdf/reports/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/debts").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/debts").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/debts").permitAll()
+                        .requestMatchers(HttpMethod.PATCH, "/debts").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/debts").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
