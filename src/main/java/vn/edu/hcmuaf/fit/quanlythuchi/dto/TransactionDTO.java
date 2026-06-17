@@ -26,4 +26,5 @@ public class TransactionDTO {
     private String reason;
     private String accompaniedBy;
     private String originalDocuments;
+    private Long debtId; // null = giao dịch thường | có giá trị = đang thanh toán khoản nợ này
 }

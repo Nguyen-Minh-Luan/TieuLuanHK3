@@ -1,0 +1,46 @@
+package vn.edu.hcmuaf.fit.quanlythuchi.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+import vn.edu.hcmuaf.fit.quanlythuchi.entity.Debt;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface DebtRepository extends JpaRepository<Debt, Long> {
+
+    /** Lấy tất cả khoản nợ chưa bị xóa */
+    List<Debt> findByIsDeletedFalse();
+
+    /** Lấy khoản nợ theo ID, chưa bị xóa */
+    Optional<Debt> findByIdAndIsDeletedFalse(Long id);
+
+    /** Lấy danh sách nợ theo loại (RECEIVABLE hoặc PAYABLE) */
+    List<Debt> findByDebtTypeAndIsDeletedFalse(String debtType);
+
+    /** Lấy danh sách nợ theo đối tác */
+    List<Debt> findByPartner_IdAndIsDeletedFalse(Long partnerId);
+
+    /** Lấy danh sách nợ chưa thanh toán xong */
+    List<Debt> findByIsPaidFalseAndIsDeletedFalse();
+
+    /** Lấy danh sách nợ chưa thanh toán xong theo loại */
+    List<Debt> findByDebtTypeAndIsPaidFalseAndIsDeletedFalse(String debtType);
+
+    /**
+     * Tính tổng số tiền nợ còn phải thu (RECEIVABLE, chưa trả xong).
+     * Dùng cho dashboard tổng quan.
+     */
+    @Query("SELECT COALESCE(SUM(d.totalAmount - d.paidAmount), 0.0) FROM Debt d " +
+           "WHERE d.debtType = 'RECEIVABLE' AND d.isPaid = false AND d.isDeleted = false")
+    Double getTotalRemainingReceivable();
+
+    /**
+     * Tính tổng số tiền mình còn phải trả (PAYABLE, chưa trả xong).
+     */
+    @Query("SELECT COALESCE(SUM(d.totalAmount - d.paidAmount), 0.0) FROM Debt d " +
+           "WHERE d.debtType = 'PAYABLE' AND d.isPaid = false AND d.isDeleted = false")
+    Double getTotalRemainingPayable();
+}

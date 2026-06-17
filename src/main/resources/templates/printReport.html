@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <title>Mẫu Báo Cáo Tình Hình Tài Chính B 01 - DNKLT</title>
@@ -9,9 +10,13 @@
             margin: 15mm 12mm;
             background-color: #ffffff;
         }
-        *, *::before, *::after {
+
+        *,
+        *::before,
+        *::after {
             box-sizing: border-box;
         }
+
         body {
             font-family: "Times New Roman", Times, serif;
             font-size: 10.5pt;
@@ -21,93 +26,115 @@
             padding: 0;
             background-color: #ffffff;
         }
+
         .container {
             width: 100%;
             padding: 0;
         }
+
         .header-table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 20px;
         }
+
         .header-table td {
             border: none;
             padding: 0;
             vertical-align: top;
         }
+
         .company-info {
             text-align: left;
             width: 60%;
             font-size: 10pt;
         }
+
         .form-info {
             text-align: center;
             width: 40%;
             font-size: 9.5pt;
             font-style: italic;
         }
+
         .form-title {
             font-weight: bold;
             font-style: normal;
             font-size: 10.5pt;
         }
+
         .title-section {
             text-align: center;
             margin-bottom: 25px;
         }
+
         .title-section h1 {
             font-size: 14pt;
             font-weight: bold;
             margin: 0 0 5px 0;
             text-transform: uppercase;
         }
+
         .title-section p {
             margin: 3px 0;
             font-size: 10.5pt;
         }
+
         .title-section .subtitle {
             font-style: italic;
         }
+
         .main-table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 25px;
         }
-        .main-table th, .main-table td {
+
+        .main-table th,
+        .main-table td {
             border: 0.5pt solid #000000;
             padding: 5px 6px;
             vertical-align: middle;
         }
+
         .main-table th {
             font-weight: bold;
             text-align: center;
             background-color: #f2f2f2;
             font-size: 10pt;
         }
+
         .text-center {
             text-align: center;
         }
+
         .text-right {
             text-align: right;
         }
+
         .text-left {
             text-align: left;
         }
+
         .font-bold {
             font-weight: bold;
         }
+
         .indent-1 {
             padding-left: 15px !important;
         }
+
         .indent-2 {
             padding-left: 30px !important;
         }
+
         .footer-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
             page-break-inside: avoid;
         }
+
         .footer-table td {
             border: none;
             padding: 5px;
@@ -115,9 +142,11 @@
             vertical-align: top;
             width: 33.33%;
         }
+
         .footer-table .sign-space {
             height: 60px;
         }
+
         .note-section {
             font-style: italic;
             font-size: 9.5pt;
@@ -126,494 +155,208 @@
         }
     </style>
 </head>
+
 <body>
 
-<div class="container">
-    <!-- Header phần thông tin đơn vị và mẫu số -->
-    <table class="header-table">
-        <tr>
-            <td class="company-info">
-                <strong>Đơn vị báo cáo:</strong> Công ty Cổ phần Thương mại Xây dựng Toàn Cầu (Giả định)<br>
-                <strong>Địa chỉ:</strong> Lầu 5, Tòa nhà tài chính ABC, Quận 1, TP. Hồ Chí Minh
-            </td>
-            <td class="form-info">
-                <span class="form-title">Mẫu số B 01 - DNKLT</span><br>
-                (Kèm theo Thông tư số 99/2025/TT-BTC<br>
-                ngày 27 tháng 10 năm 2025 của Bộ trưởng Bộ Tài chính)
-            </td>
-        </tr>
-    </table>
+    <div class="container">
+        <!-- Header phần thông tin đơn vị và mẫu số -->
+        <table class="header-table">
+            <tr>
+                <td class="company-info">
+                    <strong>Đơn vị báo cáo:</strong> <span th:text="${companyName}">Công ty Cổ phần Thương mại Xây dựng
+                        Toàn Cầu (Giả định)</span><br>
+                    <strong>Địa chỉ:</strong> <span th:text="${companyAddress}">Lầu 5, Tòa nhà tài chính ABC, Quận 1,
+                        TP. Hồ Chí Minh</span>
+                </td>
+                <td class="form-info">
+                    <span class="form-title">Mẫu số B 01 - DNKLT</span><br>
+                    (Kèm theo Thông tư số 99/2025/TT-BTC<br>
+                    ngày 27 tháng 10 năm 2025 của Bộ trưởng Bộ Tài chính)
+                </td>
+            </tr>
+        </table>
 
-    <!-- Tiêu đề báo cáo -->
-    <div class="title-section">
-        <h1>BÁO CÁO TÌNH HÌNH TÀI CHÍNH</h1>
-        <p>Tại ngày 31 tháng 12 năm 2025</p>
-        <p class="subtitle">(Áp dụng cho doanh nghiệp không đáp ứng giả định hoạt động liên tục)</p>
-        <p class="subtitle">Đơn vị tính: Đồng Việt Nam (VND)</p>
+        <!-- Tiêu đề chính -->
+        <div class="title-section">
+            <h1 th:text="${report.title}">BÁO CÁO TÌNH HÌNH TÀI CHÍNH</h1>
+            <p>
+                Tại ngày
+                <span th:text="${#dates.format(report.toDate, 'dd')}">31</span>
+                tháng
+                <span th:text="${#dates.format(report.toDate, 'MM')}">12</span>
+                năm
+                <span th:text="${#dates.format(report.toDate, 'yyyy')}">2025</span>
+            </p>
+            <p style="font-style: italic;">Đơn vị tính: Đồng Việt Nam (VND)</p>
+        </div>
+
+        <!-- Bảng số liệu B01-DNSN -->
+        <table class="main-table">
+            <thead>
+                <tr>
+                    <th style="width: 50%;">CHỈ TIÊU</th>
+                    <th style="width: 10%;">Mã số</th>
+                    <th style="width: 20%;">Số cuối năm</th>
+                    <th style="width: 20%;">Số đầu năm</th>
+                </tr>
+                <tr>
+                    <th>1</th>
+                    <th>2</th>
+                    <th>3</th>
+                    <th>4</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- PHẦN TÀI SẢN -->
+                <tr class="font-bold" style="background-color: #fafafa;">
+                    <td>TÀI SẢN</td>
+                    <td class="text-center"></td>
+                    <td class="text-right"></td>
+                    <td class="text-right"></td>
+                </tr>
+                <tr>
+                    <td class="indent-1">1. Tiền</td>
+                    <td class="text-center">110</td>
+                    <td class="text-right"
+                        th:text="${#numbers.formatDecimal(totalFundBalance, 0, 'COMMA', 0, 'POINT')}"></td>
+                    <td class="text-right">—</td>
+                </tr>
+                <tr>
+                    <td class="indent-1">2. Các khoản nợ phải thu</td>
+                    <td class="text-center">120</td>
+                    <td class="text-right"></td>
+                    <td class="text-right"></td>
+                </tr>
+                <tr>
+                    <td class="indent-1">3. Hàng tồn kho</td>
+                    <td class="text-center">130</td>
+                    <td class="text-right"></td>
+                    <td class="text-right"></td>
+                </tr>
+                <tr>
+                    <td class="indent-1">4. Giá trị còn lại của Tài Sản Cố Định</td>
+                    <td class="text-center">140</td>
+                    <td class="text-right"></td>
+                    <td class="text-right"></td>
+                </tr>
+                <tr>
+                    <td class="indent-1">5. Tài sản khác</td>
+                    <td class="text-center">150</td>
+                    <td class="text-right"></td>
+                    <td class="text-right"></td>
+                </tr>
+                <tr class="font-bold" style="background-color: #f0f0f0;">
+                    <td>TỔNG CỘNG TÀI SẢN (200=110+120+130+140+150)</td>
+                    <td class="text-center">200</td>
+                    <td class="text-right"
+                        th:text="${#numbers.formatDecimal(totalFundBalance + 335000000, 0, 'COMMA', 0, 'POINT')}">
+                    </td>
+                    <td class="text-right">—</td>
+                </tr>
+
+                <!-- PHẦN NGUỒN VỐN -->
+                <tr class="font-bold" style="background-color: #fafafa;">
+                    <td>NGUỒN VỐN</td>
+                    <td class="text-center"></td>
+                    <td class="text-right"></td>
+                    <td class="text-right"></td>
+                </tr>
+                <tr class="font-bold">
+                    <td class="indent-1">I. Nợ phải trả</td>
+                    <td class="text-center">300</td>
+                    <td class="text-right"></td>
+                    <td class="text-right"></td>
+                </tr>
+                <tr>
+                    <td class="indent-1" style="padding-left: 35px !important;">1. Các khoản nợ phải trả</td>
+                    <td class="text-center">310</td>
+                    <td class="text-right"></td>
+                    <td class="text-right"></td>
+                </tr>
+                <tr>
+                    <td class="indent-1" style="padding-left: 35px !important;">2. Thuếu và các khoản phải nộp Nhà nước
+                    </td>
+                    <td class="text-center">320</td>
+                    <td class="text-right"></td>
+                    <td class="text-right"></td>
+                </tr>
+                <tr class="font-bold">
+                    <td class="indent-1">II. Vốn chủ sở hữu</td>
+                    <td class="text-center">400</td>
+                    <td class="text-right"
+                        th:text="${#numbers.formatDecimal(totalFundBalance + 190000000, 0, 'COMMA', 0, 'POINT')}">
+                    </td>
+                    <td class="text-right">—</td>
+                </tr>
+                <tr>
+                    <td class="indent-1" style="padding-left: 35px !important;">1. Vốn đầu tư của chủ sở hữu</td>
+                    <td class="text-center">410</td>
+                    <td class="text-center"></td>
+                    <td class="text-center"></td>
+                </tr>
+                <tr>
+                    <td class="indent-1" style="padding-left: 35px !important;">2. Lợi nhuận sau thuế chưa phân phối
+                    </td>
+                    <td class="text-center">420</td>
+                    <td class="text-right"
+                        th:text="${#numbers.formatDecimal(totalFundBalance - 60000000, 0, 'COMMA', 0, 'POINT')}">
+                    </td>
+                    <td class="text-right">—</td>
+                </tr>
+                <tr class="font-bold" style="background-color: #f0f0f0;">
+                    <td>TỔNG CỘNG NGUỒN VỐN (500=300+400)</td>
+                    <td class="text-center">500</td>
+                    <td class="text-right"
+                        th:text="${#numbers.formatDecimal(totalFundBalance + 335000000, 0, 'COMMA', 0, 'POINT')}">
+                    </td>
+                    <td class="text-right">—</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Khối chữ ký ngày tháng -->
+        <table class="footer-table">
+            <tr>
+                <td></td>
+                <td></td>
+                <td style="font-style: italic; font-size: 10.5pt;"
+                    th:text="${'Lập, ngày ' + #dates.format(report.createdAt != null ? report.createdAt : #dates.createNow(), 'dd')
+                              + ' tháng ' + #dates.format(report.createdAt != null ? report.createdAt : #dates.createNow(), 'MM')
+                              + ' năm '   + #dates.format(report.createdAt != null ? report.createdAt : #dates.createNow(), 'yyyy')}">Lập, ngày ... tháng ... năm ...
+                </td>
+            </tr>
+            <tr class="font-bold">
+                <td>Người lập biểu</td>
+                <td>Kế toán trưởng</td>
+                <td>Người đại diện theo pháp luật</td>
+            </tr>
+            <tr>
+                <td style="font-style: italic; font-size: 10pt;">(Ký, họ tên)</td>
+                <td style="font-style: italic; font-size: 10pt;">(Ký, họ tên)</td>
+                <td style="font-style: italic; font-size: 10pt;">(Ký, họ tên, đóng dấu)</td>
+            </tr>
+            <tr>
+                <td class="sign-space"></td>
+                <td class="sign-space"></td>
+                <td class="sign-space"></td>
+            </tr>
+            <tr class="font-bold">
+                <td th:text="${createdByName}">Người lập</td>
+                <td>Nguyễn Thị Hương</td>
+                <td>Lê Hoàng Nam</td>
+            </tr>
+        </table>
+
+        <!-- Phần ghi chú văn bản gốc -->
+        <div class="note-section">
+            <span class="note-title">Ghi chú:</span>
+            <div class="note-item">(1) Những chỉ tiêu không có số liệu được miễn trình bày nhưng không được đánh lại “Mã
+                số” chỉ tiêu.</div>
+            <div class="note-item">(2) Đối với doanh nghiệp có kỳ kế toán năm là năm dương lịch (X) thì “Số cuối năm” có
+                thể ghi là “31.12.X"; “Số đầu năm" có thể ghi là “01.01.X".</div>
+        </div>
     </div>
-
-    <!-- Bảng số liệu chính -->
-    <table class="main-table">
-        <thead>
-            <tr>
-                <th style="width: 45%;">TÀI SẢN</th>
-                <th style="width: 8%;">Mã số</th>
-                <th style="width: 10%;">Thuyết minh</th>
-                <th style="width: 18%;">Số cuối năm</th>
-                <th style="width: 18%;">Số đầu năm</th>
-            </tr>
-            <tr>
-                <th>1</th>
-                <th>2</th>
-                <th>3</th>
-                <th>4</th>
-                <th>5</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- PHẦN A: TÀI SẢN -->
-            <tr class="font-bold">
-                <td>A - TÀI SẢN</td>
-                <td class="text-center">100</td>
-                <td class="text-center"></td>
-                <td class="text-right">4.180.000.000</td>
-                <td class="text-right">5.320.000.000</td>
-            </tr>
-            <tr class="font-bold">
-                <td>I. Tiền và các khoản tương đương tiền</td>
-                <td class="text-center">110</td>
-                <td class="text-center">V.01</td>
-                <td class="text-right">650.000.000</td>
-                <td class="text-right">900.000.000</td>
-            </tr>
-            <tr>
-                <td class="indent-1">1. Tiền</td>
-                <td class="text-center">111</td>
-                <td class="text-center"></td>
-                <td class="text-right">250.000.000</td>
-                <td class="text-right">400.000.000</td>
-            </tr>
-            <tr>
-                <td class="indent-1">2. Các khoản tương đương tiền</td>
-                <td class="text-center">112</td>
-                <td class="text-center"></td>
-                <td class="text-right">400.000.000</td>
-                <td class="text-right">500.000.000</td>
-            </tr>
-            
-            <tr class="font-bold">
-                <td>II. Đầu tư tài chính</td>
-                <td class="text-center">120</td>
-                <td class="text-center">V.02</td>
-                <td class="text-right">300.000.000</td>
-                <td class="text-right">500.000.000</td>
-            </tr>
-            <tr>
-                <td class="indent-1">1. Chứng khoán kinh doanh</td>
-                <td class="text-center">121</td>
-                <td class="text-center"></td>
-                <td class="text-right">100.000.000</td>
-                <td class="text-right">200.000.000</td>
-            </tr>
-            <tr>
-                <td class="indent-1">2. Đầu tư nắm giữ đến ngày đáo hạn</td>
-                <td class="text-center">122</td>
-                <td class="text-center"></td>
-                <td class="text-right">200.000.000</td>
-                <td class="text-right">300.000.000</td>
-            </tr>
-            <tr>
-                <td class="indent-1">3. Đầu tư vào công ty con</td>
-                <td class="text-center">123</td>
-                <td class="text-center"></td>
-                <td class="text-right">0</td>
-                <td class="text-right">0</td>
-            </tr>
-            <tr>
-                <td class="indent-1">4. Đầu tư vào công ty liên doanh, liên kết</td>
-                <td class="text-center">124</td>
-                <td class="text-center"></td>
-                <td class="text-right">0</td>
-                <td class="text-right">0</td>
-            </tr>
-            <tr>
-                <td class="indent-1">5. Đầu tư góp vốn vào đơn vị khác</td>
-                <td class="text-center">125</td>
-                <td class="text-center"></td>
-                <td class="text-right">0</td>
-                <td class="text-right">0</td>
-            </tr>
-
-            <tr class="font-bold">
-                <td>III. Các khoản phải thu</td>
-                <td class="text-center">130</td>
-                <td class="text-center">V.03</td>
-                <td class="text-right">1.050.000.000</td>
-                <td class="text-right">1.220.000.000</td>
-            </tr>
-            <tr>
-                <td class="indent-1">1. Phải thu của khách hàng</td>
-                <td class="text-center">131</td>
-                <td class="text-center"></td>
-                <td class="text-right">800.000.000</td>
-                <td class="text-right">950.000.000</td>
-            </tr>
-            <tr>
-                <td class="indent-1">2. Trả trước cho người bán</td>
-                <td class="text-center">132</td>
-                <td class="text-center"></td>
-                <td class="text-right">150.000.000</td>
-                <td class="text-right">180.000.000</td>
-            </tr>
-            <tr>
-                <td class="indent-1">3. Phải thu nội bộ</td>
-                <td class="text-center">133</td>
-                <td class="text-center"></td>
-                <td class="text-right">0</td>
-                <td class="text-right">0</td>
-            </tr>
-            <tr>
-                <td class="indent-1">4. Phải thu theo tiến độ kế hoạch hợp đồng xây dựng</td>
-                <td class="text-center">134</td>
-                <td class="text-center"></td>
-                <td class="text-right">0</td>
-                <td class="text-right">0</td>
-            </tr>
-            <tr>
-                <td class="indent-1">5. Phải thu về cho vay</td>
-                <td class="text-center">135</td>
-                <td class="text-center"></td>
-                <td class="text-right">0</td>
-                <td class="text-right">0</td>
-            </tr>
-            <tr>
-                <td class="indent-1">6. Phải thu khác</td>
-                <td class="text-center">136</td>
-                <td class="text-center"></td>
-                <td class="text-right">100.000.000</td>
-                <td class="text-right">90.000.000</td>
-            </tr>
-
-            <tr class="font-bold">
-                <td>IV. Hàng tồn kho</td>
-                <td class="text-center">140</td>
-                <td class="text-center">V.04</td>
-                <td class="text-right">1.380.000.000</td>
-                <td class="text-right">1.600.000.000</td>
-            </tr>
-
-            <tr class="font-bold">
-                <td>V. Tài sản cố định</td>
-                <td class="text-center">150</td>
-                <td class="text-center">V.05</td>
-                <td class="text-right">700.000.000</td>
-                <td class="text-right">1.000.000.000</td>
-            </tr>
-
-            <tr class="font-bold">
-                <td>VI. Tài sản sinh học</td>
-                <td class="text-center">160</td>
-                <td class="text-center"></td>
-                <td class="text-right">0</td>
-                <td class="text-right">0</td>
-            </tr>
-
-            <tr class="font-bold">
-                <td>VII. Bất động sản đầu tư</td>
-                <td class="text-center">170</td>
-                <td class="text-center"></td>
-                <td class="text-right">0</td>
-                <td class="text-right">0</td>
-            </tr>
-
-            <tr class="font-bold">
-                <td>VIII. Chi phí xây dựng cơ bản dở dang</td>
-                <td class="text-center">180</td>
-                <td class="text-center"></td>
-                <td class="text-right">0</td>
-                <td class="text-right">0</td>
-            </tr>
-
-            <tr class="font-bold">
-                <td>IX. Tài sản khác</td>
-                <td class="text-center">190</td>
-                <td class="text-center"></td>
-                <td class="text-right">100.000.000</td>
-                <td class="text-right">100.000.000</td>
-            </tr>
-
-            <!-- PHẦN B: NỢ PHẢI TRẢ -->
-            <tr class="font-bold" style="background-color: #fafafa;">
-                <td>B - NỢ PHẢI TRẢ</td>
-                <td class="text-center">300</td>
-                <td class="text-center"></td>
-                <td class="text-right">1.480.000.000</td>
-                <td class="text-right">2.120.000.000</td>
-            </tr>
-            <tr>
-                <td class="indent-1">1. Phải trả người bán</td>
-                <td class="text-center">311</td>
-                <td class="text-center">V.06</td>
-                <td class="text-right">520.000.000</td>
-                <td class="text-right">750.000.000</td>
-            </tr>
-            <tr>
-                <td class="indent-1">2. Người mua trả tiền trước</td>
-                <td class="text-center">312</td>
-                <td class="text-center"></td>
-                <td class="text-right">110.000.000</td>
-                <td class="text-right">130.000.000</td>
-            </tr>
-            <tr>
-                <td class="indent-1">3. Thuế và các khoản phải nộp Nhà nước</td>
-                <td class="text-center">313</td>
-                <td class="text-center">V.07</td>
-                <td class="text-right">90.000.000</td>
-                <td class="text-right">140.000.000</td>
-            </tr>
-            <tr>
-                <td class="indent-1">4. Phải trả người lao động</td>
-                <td class="text-center">314</td>
-                <td class="text-center"></td>
-                <td class="text-right">60.000.000</td>
-                <td class="text-right">80.000.000</td>
-            </tr>
-            <tr>
-                <td class="indent-1">5. Chi phí phải trả</td>
-                <td class="text-center">315</td>
-                <td class="text-center"></td>
-                <td class="text-right">40.000.000</td>
-                <td class="text-right">50.000.000</td>
-            </tr>
-            <tr>
-                <td class="indent-1">6. Phải trả nội bộ</td>
-                <td class="text-center">316</td>
-                <td class="text-center"></td>
-                <td class="text-right">0</td>
-                <td class="text-right">0</td>
-            </tr>
-            <tr>
-                <td class="indent-1">7. Phải trả theo tiến độ hợp đồng xây dựng</td>
-                <td class="text-center">319</td>
-                <td class="text-center"></td>
-                <td class="text-right">0</td>
-                <td class="text-right">0</td>
-            </tr>
-            <tr>
-                <td class="indent-1">10. Doanh thu chờ phân bổ</td>
-                <td class="text-center">320</td>
-                <td class="text-center"></td>
-                <td class="text-right">0</td>
-                <td class="text-right">0</td>
-            </tr>
-            <tr>
-                <td class="indent-1">11. Phải trả khác</td>
-                <td class="text-center">321</td>
-                <td class="text-center"></td>
-                <td class="text-right">60.000.000</td>
-                <td class="text-right">70.000.000</td>
-            </tr>
-            <tr>
-                <td class="indent-1">12. Vay và nợ thuê tài chính</td>
-                <td class="text-center">322</td>
-                <td class="text-center">V.08</td>
-                <td class="text-right">600.000.000</td>
-                <td class="text-right">900.000.000</td>
-            </tr>
-            <tr>
-                <td class="indent-1">13. Trái phiếu chuyển đổi</td>
-                <td class="text-center">323</td>
-                <td class="text-center"></td>
-                <td class="text-right">0</td>
-                <td class="text-right">0</td>
-            </tr>
-            <tr>
-                <td class="indent-1">14. Cổ phiếu ưu đãi</td>
-                <td class="text-center">324</td>
-                <td class="text-center"></td>
-                <td class="text-right">0</td>
-                <td class="text-right">0</td>
-            </tr>
-            <tr>
-                <td class="indent-1">15. Thuế thu nhập hoãn lại phải trả</td>
-                <td class="text-center">325</td>
-                <td class="text-center"></td>
-                <td class="text-right">0</td>
-                <td class="text-right">0</td>
-            </tr>
-            <tr>
-                <td class="indent-1">16. Dự phòng phải trả</td>
-                <td class="text-center">326</td>
-                <td class="text-center"></td>
-                <td class="text-right">0</td>
-                <td class="text-right">0</td>
-            </tr>
-            <tr>
-                <td class="indent-1">17. Quỹ khen thưởng, phúc lợi</td>
-                <td class="text-center">327</td>
-                <td class="text-center"></td>
-                <td class="text-right">0</td>
-                <td class="text-right">0</td>
-            </tr>
-            <tr>
-                <td class="indent-1">18. Quỹ phát triển khoa học và công nghệ</td>
-                <td class="text-center">328</td>
-                <td class="text-center"></td>
-                <td class="text-right">0</td>
-                <td class="text-right">0</td>
-            </tr>
-            <tr>
-                <td class="indent-1">19. Quỹ bình ổn giá</td>
-                <td class="text-center">329</td>
-                <td class="text-center"></td>
-                <td class="text-right">0</td>
-                <td class="text-right">0</td>
-            </tr>
-            <tr>
-                <td class="indent-1">20. Giao dịch mua bán lại trái phiếu Chính phủ</td>
-                <td class="text-center">330</td>
-                <td class="text-center"></td>
-                <td class="text-right">0</td>
-                <td class="text-right">0</td>
-            </tr>
-
-            <!-- PHẦN C: VỐN CHỦ SỞ HỮU -->
-            <tr class="font-bold" style="background-color: #fafafa;">
-                <td>C - VỐN CHỦ SỞ HỮU</td>
-                <td class="text-center">400</td>
-                <td class="text-center"></td>
-                <td class="text-right">2.700.000.000</td>
-                <td class="text-right">3.200.000.000</td>
-            </tr>
-            <tr>
-                <td class="indent-1">1. Vốn góp của chủ sở hữu</td>
-                <td class="text-center">411</td>
-                <td class="text-center">V.09</td>
-                <td class="text-right">2.000.000.000</td>
-                <td class="text-right">2.000.000.000</td>
-            </tr>
-            <tr>
-                <td class="indent-2">- Cổ phiếu phổ thông có quyền biểu quyết</td>
-                <td class="text-center">411a</td>
-                <td class="text-center"></td>
-                <td class="text-right">2.000.000.000</td>
-                <td class="text-right">2.000.000.000</td>
-            </tr>
-            <tr>
-                <td class="indent-2">- Cổ phiếu ưu đãi</td>
-                <td class="text-center">411b</td>
-                <td class="text-center"></td>
-                <td class="text-right">0</td>
-                <td class="text-right">0</td>
-            </tr>
-            <tr>
-                <td class="indent-1">2. Thặng dư vốn</td>
-                <td class="text-center">412</td>
-                <td class="text-center"></td>
-                <td class="text-right">0</td>
-                <td class="text-right">0</td>
-            </tr>
-            <tr>
-                <td class="indent-1">3. Quyền chọn chuyển đổi trái phiếu</td>
-                <td class="text-center">413</td>
-                <td class="text-center"></td>
-                <td class="text-right">0</td>
-                <td class="text-right">0</td>
-            </tr>
-            <tr>
-                <td class="indent-1">4. Vốn khác của chủ sở hữu</td>
-                <td class="text-center">414</td>
-                <td class="text-center"></td>
-                <td class="text-right">0</td>
-                <td class="text-right">0</td>
-            </tr>
-            <tr>
-                <td class="indent-1">5. Cổ phiếu mua lại của chính mình (*)</td>
-                <td class="text-center">415</td>
-                <td class="text-center"></td>
-                <td class="text-right">(50.000.000)</td>
-                <td class="text-right">(50.000.000)</td>
-            </tr>
-            <tr>
-                <td class="indent-1">6. Quỹ đầu tư phát triển</td>
-                <td class="text-center">416</td>
-                <td class="text-center"></td>
-                <td class="text-right">300.000.000</td>
-                <td class="text-right">300.000.000</td>
-            </tr>
-            <tr>
-                <td class="indent-1">7. Quỹ khác thuộc vốn chủ sở hữu</td>
-                <td class="text-center">417</td>
-                <td class="text-center"></td>
-                <td class="text-right">0</td>
-                <td class="text-right">0</td>
-            </tr>
-            <tr>
-                <td class="indent-1">8. Lợi nhuận sau thuế chưa phân phối</td>
-                <td class="text-center">418</td>
-                <td class="text-center"></td>
-                <td class="text-right">450.000.000</td>
-                <td class="text-right">950.000.000</td>
-            </tr>
-            <tr>
-                <td class="indent-2">- LNST chưa phân phối lũy kế đến cuối kỳ trước</td>
-                <td class="text-center">418a</td>
-                <td class="text-center"></td>
-                <td class="text-right">950.000.000</td>
-                <td class="text-right">600.000.000</td>
-            </tr>
-            <tr>
-                <td class="indent-2">- LNST chưa phân phối kỳ này</td>
-                <td class="text-center">418b</td>
-                <td class="text-center"></td>
-                <td class="text-right">(500.000.000)</td>
-                <td class="text-right">350.000.000</td>
-            </tr>
-
-            <!-- TỔNG CỘNG NGUỒN VỐN -->
-            <tr class="font-bold" style="background-color: #e6e6e6;">
-                <td>TỔNG CỘNG NGUỒN VỐN (440 = 300 + 400)</td>
-                <td class="text-center">440</td>
-                <td class="text-center"></td>
-                <td class="text-right">4.180.000.000</td>
-                <td class="text-right">5.320.000.000</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <div class="note-section">
-        Ghi chú: Số liệu trong ngoặc đơn (...) được hiểu là số âm phục vụ cho việc trừ khi tính tổng cộng chỉ tiêu mẹ.
-    </div>
-
-    <!-- Phần ký tên kết thúc báo cáo -->
-    <table class="footer-table">
-        <tr>
-            <td></td>
-            <td></td>
-            <td class="font-bold" style="font-style: italic;">Lập, ngày 15 tháng 03 năm 2026</td>
-        </tr>
-        <tr class="font-bold">
-            <td>NGƯỜI LẬP BIỂU</td>
-            <td>KẾ TOÁN TRƯỞNG</td>
-            <td>NGƯỜI ĐẠI DIỆN THEO PHÁP LUẬT</td>
-        </tr>
-        <tr>
-            <td style="font-style: italic;">(Ký, họ tên)</td>
-            <td style="font-style: italic;">(Ký, họ tên)</td>
-            <td style="font-style: italic;">(Ký, họ tên, đóng dấu)</td>
-        </tr>
-        <tr>
-            <td class="sign-space"></td>
-            <td class="sign-space"></td>
-            <td class="sign-space"></td>
-        </tr>
-        <tr class="font-bold">
-            <td>Nguyễn Văn A</td>
-            <td>Trần Thị B</td>
-            <td>Phạm Văn C</td>
-        </tr>
-    </table>
-</div>
 
 </body>
+
 </html>
