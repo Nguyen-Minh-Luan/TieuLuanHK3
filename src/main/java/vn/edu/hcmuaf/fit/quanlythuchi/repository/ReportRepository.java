@@ -66,4 +66,30 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     List<Transaction> findTransactionsByDateRange(
             @Param("fromDate") Date fromDate,
             @Param("toDate") Date toDate);
+
+    // Tổng nợ phải thu còn lại trong kỳ (RECEIVABLE chưa thanh toán xong)
+    @Query("SELECT COALESCE(SUM(d.totalAmount - d.paidAmount), 0.0) FROM Debt d " +
+           "WHERE d.debtType = 'RECEIVABLE' AND d.isPaid = false AND d.isDeleted = false " +
+           "AND d.debtDate BETWEEN :fromDate AND :toDate")
+    Double sumReceivableByDateRange(@Param("fromDate") Date fromDate, @Param("toDate") Date toDate);
+
+    // Tổng nợ phải trả còn lại trong kỳ (PAYABLE chưa thanh toán xong)
+    @Query("SELECT COALESCE(SUM(d.totalAmount - d.paidAmount), 0.0) FROM Debt d " +
+           "WHERE d.debtType = 'PAYABLE' AND d.isPaid = false AND d.isDeleted = false " +
+           "AND d.debtDate BETWEEN :fromDate AND :toDate")
+    Double sumPayableByDateRange(@Param("fromDate") Date fromDate, @Param("toDate") Date toDate);
+
+    // Tổng chi phí thuế trong kỳ (giao dịch EXPENSE thuộc hạng mục có tax > 0)
+    @Query(value =
+        "SELECT COALESCE(SUM(t.amount), 0.0) FROM transactions t " +
+        "JOIN categories c ON t.categories_id = c.id " +
+        "WHERE t.type = 'EXPENSE' AND t.status = 'ACTIVE' " +
+        "AND c.tax IS NOT NULL AND c.tax > 0 " +
+        "AND t.transaction_date BETWEEN :fromDate AND :toDate",
+        nativeQuery = true)
+    Double sumTaxExpenseByDateRange(@Param("fromDate") Date fromDate, @Param("toDate") Date toDate);
+
+    // Tổng vốn đầu tư ban đầu (initialBalance của tất cả Fund)
+    @Query("SELECT COALESCE(SUM(f.initialBalance), 0.0) FROM Fund f WHERE f.isDeleted = false")
+    Double getTotalInitialCapital();
 }

@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import vn.edu.hcmuaf.fit.quanlythuchi.config.ApiResponse;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.ReportDTO;
+import vn.edu.hcmuaf.fit.quanlythuchi.dto.ReportResponseDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.service.report.ReportService;
 
 import java.util.List;
@@ -23,7 +24,7 @@ public class ReportController {
      * Body: { title, type, fromDate, toDate, note, status, createdBy }
      */
     @PostMapping
-    public ResponseEntity<ApiResponse<ReportDTO>> createReport(@RequestBody ReportDTO request) {
+    public ResponseEntity<ApiResponse<ReportResponseDTO>> createReport(@RequestBody ReportDTO request) {
         return ApiResponse.created(reportService.createReport(request), "Tạo báo cáo thành công");
     }
 
@@ -32,7 +33,7 @@ public class ReportController {
      * PATCH /reports/{id}
      */
     @PatchMapping("/{id}")
-    public ResponseEntity<ApiResponse<ReportDTO>> updateReport(
+    public ResponseEntity<ApiResponse<ReportResponseDTO>> updateReport(
             @PathVariable Long id,
             @RequestBody ReportDTO request) {
         return ApiResponse.ok(reportService.updateReport(id, request), "Cập nhật báo cáo thành công");
@@ -53,7 +54,7 @@ public class ReportController {
      * GET /reports/{id}
      */
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<ReportDTO>> getReportById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<ReportResponseDTO>> getReportById(@PathVariable Long id) {
         return ApiResponse.ok(reportService.getReportById(id));
     }
 
@@ -62,7 +63,7 @@ public class ReportController {
      * GET /reports
      */
     @GetMapping
-    public ResponseEntity<ApiResponse<List<ReportDTO>>> getAllReports() {
+    public ResponseEntity<ApiResponse<List<ReportResponseDTO>>> getAllReports() {
         return ApiResponse.ok(reportService.getAllReports());
     }
 
@@ -71,7 +72,7 @@ public class ReportController {
      * GET /reports/type/{type}   (type = MONTHLY | QUARTERLY | YEARLY | CUSTOM)
      */
     @GetMapping("/type/{type}")
-    public ResponseEntity<ApiResponse<List<ReportDTO>>> getReportsByType(@PathVariable String type) {
+    public ResponseEntity<ApiResponse<List<ReportResponseDTO>>> getReportsByType(@PathVariable String type) {
         return ApiResponse.ok(reportService.getReportsByType(type));
     }
 
@@ -80,7 +81,7 @@ public class ReportController {
      * GET /reports/user/{userId}
      */
     @GetMapping("/user/{userId}")
-    public ResponseEntity<ApiResponse<List<ReportDTO>>> getReportsByUser(@PathVariable Long userId) {
+    public ResponseEntity<ApiResponse<List<ReportResponseDTO>>> getReportsByUser(@PathVariable Long userId) {
         return ApiResponse.ok(reportService.getReportsByUser(userId));
     }
 
@@ -90,7 +91,7 @@ public class ReportController {
      * POST /reports/{id}/recalculate
      */
     @PostMapping("/{id}/recalculate")
-    public ResponseEntity<ApiResponse<ReportDTO>> recalculate(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<ReportResponseDTO>> recalculate(@PathVariable Long id) {
         return ApiResponse.ok(reportService.recalculate(id), "Tái tính số liệu báo cáo thành công");
     }
 }

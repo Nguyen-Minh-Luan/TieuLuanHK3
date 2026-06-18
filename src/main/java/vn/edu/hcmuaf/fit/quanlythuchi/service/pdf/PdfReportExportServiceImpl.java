@@ -9,10 +9,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
-import vn.edu.hcmuaf.fit.quanlythuchi.entity.Report;
-import vn.edu.hcmuaf.fit.quanlythuchi.entity.Transaction;
-import vn.edu.hcmuaf.fit.quanlythuchi.repository.FundRepository;
-import vn.edu.hcmuaf.fit.quanlythuchi.repository.ReportRepository;
+import vn.edu.hcmuaf.fit.quanlythuchi.dto.ReportResponseDTO;
+import vn.edu.hcmuaf.fit.quanlythuchi.service.report.ReportService;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -22,8 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PdfReportExportServiceImpl implements PdfReportExportService {
 
-    private final ReportRepository reportRepository;
-    private final FundRepository fundRepository;
+    private final ReportService reportService;
     private final TemplateEngine templateEngine;
 
     @Value("${voucher.company.name:Công ty TNHH Giải Pháp Tài Chính Việt Nam}")
@@ -34,28 +31,19 @@ public class PdfReportExportServiceImpl implements PdfReportExportService {
 
     @Override
     public byte[] generateReportPdf(Long reportId) {
-        // 1. Lấy Report entity
-        Report report = reportRepository.findByIdAndIsDeletedFalse(reportId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy báo cáo với ID: " + reportId));
+        // 1. Lấy ReportResponseDTO đã tính toán đầy đủ các chỉ tiêu
+        ReportResponseDTO report = reportService.getReportById(reportId);
 
-        // 2. Lấy danh sách giao dịch trong kỳ
-        List<Transaction> transactions = reportRepository.findTransactionsByDateRange(
-                report.getFromDate(), report.getToDate());
-
-        // 3. Tính tổng tiền quỹ hiện tại (dùng cho chỉ tiêu "Tiền và tương đương tiền" - mã 110/111)
-        Double totalFundBalance = fundRepository.getTotalFundBalance().orElse(0.0);
-
-        // 4. Đưa dữ liệu vào Context Thymeleaf
+        // 2. Đưa dữ liệu vào Context Thymeleaf
         Context context = new Context();
         context.setVariable("report", report);
         context.setVariable("companyName", companyName);
         context.setVariable("companyAddress", companyAddress);
-        context.setVariable("transactions", transactions);
-        context.setVariable("createdByName",
-                report.getCreatedBy() != null ? report.getCreatedBy().getFullName() : "");
-        context.setVariable("totalFundBalance", totalFundBalance);
+        context.setVariable("transactions", report.getTransactions());
+        context.setVariable("createdByName", report.getCreatedByName());
+        context.setVariable("totalFundBalance", report.getCashAndEquivalents());
 
-        // 5. Render Thymeleaf → HTML
+        // 3. Render Thymeleaf → HTML
         String htmlContent = templateEngine.process("printReport", context);
 
         // 6. Jsoup parse → XHTML (giống PdfExportServiceImpl)
