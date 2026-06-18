@@ -4,12 +4,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.ReportDTO;
+import vn.edu.hcmuaf.fit.quanlythuchi.dto.ReportResponseDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.TransactionDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.Report;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.Transaction;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.User;
 import vn.edu.hcmuaf.fit.quanlythuchi.repository.ReportRepository;
 import vn.edu.hcmuaf.fit.quanlythuchi.repository.UserRepository;
+import vn.edu.hcmuaf.fit.quanlythuchi.repository.FundRepository;
 import vn.edu.hcmuaf.fit.quanlythuchi.service.transaction.TransactionService;
 
 import java.math.BigDecimal;
@@ -23,13 +25,14 @@ public class ReportServiceImpl implements ReportService {
 
     private final ReportRepository reportRepository;
     private final UserRepository userRepository;
+    private final FundRepository fundRepository;
     private final TransactionService transactionService;
     // ──────────────────────────────────────────────────────────────
     //  TẠO BÁO CÁO MỚI
     // ──────────────────────────────────────────────────────────────
     @Override
     @Transactional
-    public ReportDTO createReport(ReportDTO request) {
+    public ReportResponseDTO createReport(ReportDTO request) {
         validateRequest(request);
 
         // Lấy người tạo
@@ -58,7 +61,7 @@ public class ReportServiceImpl implements ReportService {
         report.setUpdatedAt(new Date());
         report.setIsDeleted(false);
 
-        return toDTO(reportRepository.save(report),false);
+        return toResponseDTO(reportRepository.save(report),false);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -66,7 +69,7 @@ public class ReportServiceImpl implements ReportService {
     // ──────────────────────────────────────────────────────────────
     @Override
     @Transactional
-    public ReportDTO updateReport(Long id, ReportDTO request) {
+    public ReportResponseDTO updateReport(Long id, ReportDTO request) {
         Report report = findActiveReport(id);
 
         if (report.getStatus() != null && "PUBLISHED".equalsIgnoreCase(report.getStatus())) {
@@ -106,7 +109,7 @@ public class ReportServiceImpl implements ReportService {
         }
 
         report.setUpdatedAt(new Date());
-        return toDTO(reportRepository.save(report),false);
+        return toResponseDTO(reportRepository.save(report),false);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -125,29 +128,29 @@ public class ReportServiceImpl implements ReportService {
     //  LẤY CHI TIẾT
     // ──────────────────────────────────────────────────────────────
     @Override
-    public ReportDTO getReportById(Long id) {
-        return toDTO(findActiveReport(id),true);
+    public ReportResponseDTO getReportById(Long id) {
+        return toResponseDTO(findActiveReport(id),true);
     }
 
     // ──────────────────────────────────────────────────────────────
     //  LẤY DANH SÁCH
     // ──────────────────────────────────────────────────────────────
     @Override
-    public List<ReportDTO> getAllReports() {
+    public List<ReportResponseDTO> getAllReports() {
         return reportRepository.findByIsDeletedFalse()
-                .stream().map(report -> toDTO(report,false)).collect(Collectors.toList());
+                .stream().map(report -> toResponseDTO(report,false)).collect(Collectors.toList());
     }
 
     @Override
-    public List<ReportDTO> getReportsByType(String type) {
+    public List<ReportResponseDTO> getReportsByType(String type) {
         return reportRepository.findByTypeAndIsDeletedFalse(type.toUpperCase())
-                .stream().map(report -> toDTO(report,false)).collect(Collectors.toList());
+                .stream().map(report -> toResponseDTO(report,false)).collect(Collectors.toList());
     }
 
     @Override
-    public List<ReportDTO> getReportsByUser(Long userId) {
+    public List<ReportResponseDTO> getReportsByUser(Long userId) {
         return reportRepository.findByCreatedBy_IdAndIsDeletedFalse(userId)
-                .stream().map(r -> toDTO(r, false)).collect(Collectors.toList());
+                .stream().map(r -> toResponseDTO(r, false)).collect(Collectors.toList());
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -155,7 +158,7 @@ public class ReportServiceImpl implements ReportService {
     // ──────────────────────────────────────────────────────────────
     @Override
     @Transactional
-    public ReportDTO recalculate(Long id) {
+    public ReportResponseDTO recalculate(Long id) {
         Report report = findActiveReport(id);
 
         Double totalIncome  = safeDouble(reportRepository.sumIncomeByDateRange(report.getFromDate(), report.getToDate()));
@@ -166,7 +169,7 @@ public class ReportServiceImpl implements ReportService {
         report.setNetBalance(totalIncome-totalExpense);
         report.setUpdatedAt(new Date());
 
-        return toDTO(reportRepository.save(report),true);
+        return toResponseDTO(reportRepository.save(report),true);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -200,8 +203,25 @@ public class ReportServiceImpl implements ReportService {
         return value != null ? value : 0.0;
     }
 
-    private ReportDTO toDTO(Report report, boolean isIncludeDetails) {
-        ReportDTO dto = ReportDTO.builder()
+    private ReportResponseDTO toResponseDTO(Report report, boolean isIncludeDetails) {
+        Double cash             = safeDouble(fundRepository.getTotalFundBalance().orElse(0.0));
+        Double receivable       = 0.0;
+        Double payable          = 0.0;
+        Double taxExp           = 0.0;
+        Double initialCapital   = safeDouble(reportRepository.getTotalInitialCapital());
+
+        if (report.getFromDate() != null && report.getToDate() != null) {
+            receivable = safeDouble(reportRepository.sumReceivableByDateRange(report.getFromDate(), report.getToDate()));
+            payable    = safeDouble(reportRepository.sumPayableByDateRange(report.getFromDate(), report.getToDate()));
+            taxExp     = safeDouble(reportRepository.sumTaxExpenseByDateRange(report.getFromDate(), report.getToDate()));
+        }
+
+        Double totalAssets      = cash + receivable;
+        Double totalLiabilities = payable + taxExp;
+        Double totalEquity      = initialCapital;
+        Double totalLiabAndEq   = totalLiabilities + totalEquity;
+
+        ReportResponseDTO dto = ReportResponseDTO.builder()
                 .id(report.getId())
                 .title(report.getTitle())
                 .type(report.getType())
@@ -213,8 +233,18 @@ public class ReportServiceImpl implements ReportService {
                 .note(report.getNote())
                 .status(report.getStatus())
                 .createdBy(report.getCreatedBy() != null ? report.getCreatedBy().getId() : null)
+                .createdByName(report.getCreatedBy() != null ? report.getCreatedBy().getFullName() : "")
                 .createdAt(report.getCreatedAt())
                 .updatedAt(report.getUpdatedAt())
+                .cashAndEquivalents(cash)
+                .accountsReceivable(receivable)
+                .totalAssets(totalAssets)
+                .accountsPayable(payable)
+                .taxPayable(taxExp)
+                .totalLiabilities(totalLiabilities)
+                .ownerEquity(initialCapital)
+                .totalEquity(totalEquity)
+                .totalLiabilitiesAndEquity(totalLiabAndEq)
                 .build();
 
         if (isIncludeDetails && report.getFromDate() != null && report.getToDate() != null) {

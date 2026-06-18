@@ -8,14 +8,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
-import vn.edu.hcmuaf.fit.quanlythuchi.entity.Report;
-import vn.edu.hcmuaf.fit.quanlythuchi.entity.User;
-import vn.edu.hcmuaf.fit.quanlythuchi.repository.FundRepository;
-import vn.edu.hcmuaf.fit.quanlythuchi.repository.ReportRepository;
+import vn.edu.hcmuaf.fit.quanlythuchi.dto.ReportResponseDTO;
+import vn.edu.hcmuaf.fit.quanlythuchi.service.report.ReportService;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -26,10 +23,7 @@ import static org.mockito.Mockito.when;
 class PdfReportExportServiceTest {
 
     @Mock
-    private ReportRepository reportRepository;
-
-    @Mock
-    private FundRepository fundRepository;
+    private ReportService reportService;
 
     @Mock
     private TemplateEngine templateEngine;
@@ -37,32 +31,30 @@ class PdfReportExportServiceTest {
     @InjectMocks
     private PdfReportExportServiceImpl pdfReportExportService;
 
-    private Report report;
+    private ReportResponseDTO reportDTO;
 
     @BeforeEach
     void setUp() {
-        User user = new User();
-        user.setId(1L);
-        user.setFullName("Test User");
-
-        report = new Report();
-        report.setId(1L);
-        report.setTitle("Báo cáo Q1 2026");
-        report.setType("QUARTERLY");
-        report.setFromDate(new Date());
-        report.setToDate(new Date());
-        report.setTotalIncome(1000.0);
-        report.setTotalExpense(500.0);
-        report.setNetBalance(500.0);
-        report.setCreatedBy(user);
-        report.setCreatedAt(new Date());
+        reportDTO = ReportResponseDTO.builder()
+                .id(1L)
+                .title("Báo cáo Q1 2026")
+                .type("QUARTERLY")
+                .fromDate(new Date())
+                .toDate(new Date())
+                .totalIncome(1000.0)
+                .totalExpense(500.0)
+                .netBalance(500.0)
+                .createdBy(1L)
+                .createdByName("Test User")
+                .createdAt(new Date())
+                .cashAndEquivalents(15000.0)
+                .transactions(new ArrayList<>())
+                .build();
     }
 
     @Test
     void generateReportPdf_Success() {
-        when(reportRepository.findByIdAndIsDeletedFalse(1L)).thenReturn(Optional.of(report));
-        when(reportRepository.findTransactionsByDateRange(any(), any())).thenReturn(new ArrayList<>());
-        when(fundRepository.getTotalFundBalance()).thenReturn(Optional.of(15000.0));
+        when(reportService.getReportById(1L)).thenReturn(reportDTO);
         
         // Return a valid simple XHTML string
         String simpleHtml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
@@ -82,7 +74,7 @@ class PdfReportExportServiceTest {
 
     @Test
     void generateReportPdf_ReportNotFound() {
-        when(reportRepository.findByIdAndIsDeletedFalse(2L)).thenReturn(Optional.empty());
+        when(reportService.getReportById(2L)).thenThrow(new RuntimeException("Không tìm thấy báo cáo với ID: 2"));
 
         Exception exception = assertThrows(RuntimeException.class, () -> {
             pdfReportExportService.generateReportPdf(2L);
