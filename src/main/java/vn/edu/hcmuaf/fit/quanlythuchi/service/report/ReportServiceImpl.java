@@ -14,7 +14,6 @@ import vn.edu.hcmuaf.fit.quanlythuchi.repository.UserRepository;
 import vn.edu.hcmuaf.fit.quanlythuchi.repository.FundRepository;
 import vn.edu.hcmuaf.fit.quanlythuchi.service.transaction.TransactionService;
 
-import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,6 +26,7 @@ public class ReportServiceImpl implements ReportService {
     private final UserRepository userRepository;
     private final FundRepository fundRepository;
     private final TransactionService transactionService;
+
     // ──────────────────────────────────────────────────────────────
     //  TẠO BÁO CÁO MỚI
     // ──────────────────────────────────────────────────────────────
@@ -42,10 +42,9 @@ public class ReportServiceImpl implements ReportService {
 
         // Tự động tính số liệu từ transactions
         Double totalIncome  = safeDouble(reportRepository.sumIncomeByDateRange(request.getFromDate(), request.getToDate()));
-        System.out.println(totalIncome);
         Double totalExpense = safeDouble(reportRepository.sumExpenseByDateRange(request.getFromDate(), request.getToDate()));
-        System.out.println(totalExpense);
-        Double netBalance   = totalIncome-totalExpense;
+        Double netBalance   = totalIncome - totalExpense;
+
         Report report = new Report();
         report.setTitle(request.getTitle());
         report.setType(request.getType().toUpperCase());
@@ -61,7 +60,10 @@ public class ReportServiceImpl implements ReportService {
         report.setUpdatedAt(new Date());
         report.setIsDeleted(false);
 
-        return toResponseDTO(reportRepository.save(report),false);
+        // Tính và lưu chỉ tiêu bảng cân đối kế toán vào DB
+        applyBalanceSheet(report);
+
+        return toResponseDTO(reportRepository.save(report), false);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -89,7 +91,7 @@ public class ReportServiceImpl implements ReportService {
             report.setStatus(request.getStatus().toUpperCase());
         }
 
-        // Nếu khoảng thời gian thay đổi → tái tính số liệu
+        // Nếu khoảng thời gian thay đổi → tái tính toàn bộ số liệu
         boolean dateChanged = false;
         if (request.getFromDate() != null) {
             report.setFromDate(request.getFromDate());
@@ -105,11 +107,13 @@ public class ReportServiceImpl implements ReportService {
             Double totalExpense = safeDouble(reportRepository.sumExpenseByDateRange(report.getFromDate(), report.getToDate()));
             report.setTotalIncome(totalIncome);
             report.setTotalExpense(totalExpense);
-            report.setNetBalance(totalIncome-totalExpense);
+            report.setNetBalance(totalIncome - totalExpense);
+            // Tái tính cả chỉ tiêu bảng cân đối kế toán
+            applyBalanceSheet(report);
         }
 
         report.setUpdatedAt(new Date());
-        return toResponseDTO(reportRepository.save(report),false);
+        return toResponseDTO(reportRepository.save(report), false);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -129,7 +133,7 @@ public class ReportServiceImpl implements ReportService {
     // ──────────────────────────────────────────────────────────────
     @Override
     public ReportResponseDTO getReportById(Long id) {
-        return toResponseDTO(findActiveReport(id),true);
+        return toResponseDTO(findActiveReport(id), true);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -138,13 +142,13 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public List<ReportResponseDTO> getAllReports() {
         return reportRepository.findByIsDeletedFalse()
-                .stream().map(report -> toResponseDTO(report,false)).collect(Collectors.toList());
+                .stream().map(report -> toResponseDTO(report, false)).collect(Collectors.toList());
     }
 
     @Override
     public List<ReportResponseDTO> getReportsByType(String type) {
         return reportRepository.findByTypeAndIsDeletedFalse(type.toUpperCase())
-                .stream().map(report -> toResponseDTO(report,false)).collect(Collectors.toList());
+                .stream().map(report -> toResponseDTO(report, false)).collect(Collectors.toList());
     }
 
     @Override
@@ -161,20 +165,58 @@ public class ReportServiceImpl implements ReportService {
     public ReportResponseDTO recalculate(Long id) {
         Report report = findActiveReport(id);
 
+        // Tái tính thu/chi
         Double totalIncome  = safeDouble(reportRepository.sumIncomeByDateRange(report.getFromDate(), report.getToDate()));
         Double totalExpense = safeDouble(reportRepository.sumExpenseByDateRange(report.getFromDate(), report.getToDate()));
-
         report.setTotalIncome(totalIncome);
         report.setTotalExpense(totalExpense);
-        report.setNetBalance(totalIncome-totalExpense);
+        report.setNetBalance(totalIncome - totalExpense);
+
+        // Tái tính toàn bộ chỉ tiêu bảng cân đối và lưu vào DB
+        applyBalanceSheet(report);
         report.setUpdatedAt(new Date());
 
-        return toResponseDTO(reportRepository.save(report),true);
+        return toResponseDTO(reportRepository.save(report), true);
     }
 
     // ──────────────────────────────────────────────────────────────
     //  HELPER
     // ──────────────────────────────────────────────────────────────
+
+    /**
+     * Tính toán các chỉ tiêu bảng cân đối kế toán (mã 110–500)
+     * và ghi thẳng vào các field của Report entity để chuẩn bị save xuống DB.
+     * Phương thức này dùng chung cho createReport(), updateReport(), recalculate().
+     */
+    private void applyBalanceSheet(Report report) {
+        Double cash           = safeDouble(fundRepository.getTotalFundBalance().orElse(0.0));
+        Double initialCapital = safeDouble(reportRepository.getTotalInitialCapital());
+        Double receivable     = 0.0;
+        Double payable        = 0.0;
+        Double taxExp         = 0.0;
+
+        if (report.getFromDate() != null && report.getToDate() != null) {
+            receivable = safeDouble(reportRepository.sumReceivableByDateRange(report.getFromDate(), report.getToDate()));
+            payable    = safeDouble(reportRepository.sumPayableByDateRange(report.getFromDate(), report.getToDate()));
+            taxExp     = safeDouble(reportRepository.sumTaxExpenseByDateRange(report.getFromDate(), report.getToDate()));
+        }
+
+        Double totalAssets      = cash + receivable;
+        Double totalLiabilities = payable + taxExp;
+        Double totalEquity      = initialCapital;
+        Double totalLiabAndEq   = totalLiabilities + totalEquity;
+
+        report.setCashAndEquivalents(cash);
+        report.setAccountsReceivable(receivable);
+        report.setTotalAssets(totalAssets);
+        report.setAccountsPayable(payable);
+        report.setTaxPayable(taxExp);
+        report.setTotalLiabilities(totalLiabilities);
+        report.setOwnerEquity(initialCapital);
+        report.setTotalEquity(totalEquity);
+        report.setTotalLiabilitiesAndEquity(totalLiabAndEq);
+    }
+
     private Report findActiveReport(Long id) {
         return reportRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException(
@@ -203,24 +245,12 @@ public class ReportServiceImpl implements ReportService {
         return value != null ? value : 0.0;
     }
 
+    /**
+     * Chuyển Report entity → ReportResponseDTO.
+     * Các chỉ tiêu bảng cân đối được đọc thẳng từ entity (đã được lưu vào DB),
+     * không còn tính toán động tại đây nữa.
+     */
     private ReportResponseDTO toResponseDTO(Report report, boolean isIncludeDetails) {
-        Double cash             = safeDouble(fundRepository.getTotalFundBalance().orElse(0.0));
-        Double receivable       = 0.0;
-        Double payable          = 0.0;
-        Double taxExp           = 0.0;
-        Double initialCapital   = safeDouble(reportRepository.getTotalInitialCapital());
-
-        if (report.getFromDate() != null && report.getToDate() != null) {
-            receivable = safeDouble(reportRepository.sumReceivableByDateRange(report.getFromDate(), report.getToDate()));
-            payable    = safeDouble(reportRepository.sumPayableByDateRange(report.getFromDate(), report.getToDate()));
-            taxExp     = safeDouble(reportRepository.sumTaxExpenseByDateRange(report.getFromDate(), report.getToDate()));
-        }
-
-        Double totalAssets      = cash + receivable;
-        Double totalLiabilities = payable + taxExp;
-        Double totalEquity      = initialCapital;
-        Double totalLiabAndEq   = totalLiabilities + totalEquity;
-
         ReportResponseDTO dto = ReportResponseDTO.builder()
                 .id(report.getId())
                 .title(report.getTitle())
@@ -236,15 +266,16 @@ public class ReportServiceImpl implements ReportService {
                 .createdByName(report.getCreatedBy() != null ? report.getCreatedBy().getFullName() : "")
                 .createdAt(report.getCreatedAt())
                 .updatedAt(report.getUpdatedAt())
-                .cashAndEquivalents(cash)
-                .accountsReceivable(receivable)
-                .totalAssets(totalAssets)
-                .accountsPayable(payable)
-                .taxPayable(taxExp)
-                .totalLiabilities(totalLiabilities)
-                .ownerEquity(initialCapital)
-                .totalEquity(totalEquity)
-                .totalLiabilitiesAndEquity(totalLiabAndEq)
+                // Đọc từ DB – không tính lại mỗi lần GET
+                .cashAndEquivalents(report.getCashAndEquivalents())
+                .accountsReceivable(report.getAccountsReceivable())
+                .totalAssets(report.getTotalAssets())
+                .accountsPayable(report.getAccountsPayable())
+                .taxPayable(report.getTaxPayable())
+                .totalLiabilities(report.getTotalLiabilities())
+                .ownerEquity(report.getOwnerEquity())
+                .totalEquity(report.getTotalEquity())
+                .totalLiabilitiesAndEquity(report.getTotalLiabilitiesAndEquity())
                 .build();
 
         if (isIncludeDetails && report.getFromDate() != null && report.getToDate() != null) {

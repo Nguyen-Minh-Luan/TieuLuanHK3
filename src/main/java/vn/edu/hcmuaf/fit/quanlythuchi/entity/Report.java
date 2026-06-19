@@ -66,4 +66,42 @@ public class Report {
 
     @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted = false;
+
+    // ── Phần Tài Sản ─────────────────────────────────────────────
+    /** Mã 110: Tiền (tổng currentBalance của Fund tại thời điểm tạo báo cáo) */
+    @Column(name = "cash_and_equivalents")
+    private Double cashAndEquivalents;
+
+    /** Mã 120: Nợ phải thu (RECEIVABLE chưa thanh toán trong kỳ) */
+    @Column(name = "accounts_receivable")
+    private Double accountsReceivable;
+
+    /** Mã 200: Tổng tài sản = 110 + 120 */
+    @Column(name = "total_assets")
+    private Double totalAssets;
+
+    // ── Phần Nguồn Vốn ───────────────────────────────────────────
+    /** Mã 310: Nợ phải trả (PAYABLE chưa thanh toán trong kỳ) */
+    @Column(name = "accounts_payable")
+    private Double accountsPayable;
+
+    /** Mã 320: Thuế phải nộp (EXPENSE thuộc category có tax > 0 trong kỳ) */
+    @Column(name = "tax_payable")
+    private Double taxPayable;
+
+    /** Mã 300: Tổng nợ phải trả = 310 + 320 */
+    @Column(name = "total_liabilities")
+    private Double totalLiabilities;
+
+    /** Mã 410: Vốn đầu tư của chủ sở hữu (tổng initialBalance của Fund) */
+    @Column(name = "owner_equity")
+    private Double ownerEquity;
+
+    /** Mã 400: Vốn chủ sở hữu = 410 */
+    @Column(name = "total_equity")
+    private Double totalEquity;
+
+    /** Mã 500: Tổng nguồn vốn = 300 + 400 */
+    @Column(name = "total_liabilities_and_equity")
+    private Double totalLiabilitiesAndEquity;
 }
