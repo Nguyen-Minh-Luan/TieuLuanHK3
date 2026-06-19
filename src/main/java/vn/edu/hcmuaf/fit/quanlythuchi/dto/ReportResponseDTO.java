@@ -40,6 +40,17 @@ public class ReportResponseDTO {
     private Double totalEquity;              // Mã 400: Vốn chủ sở hữu
     private Double totalLiabilitiesAndEquity;// Mã 500: Tổng nguồn vốn
 
+    // Số đầu năm (Beginning of Year)
+    private Double cashAndEquivalentsBoy;
+    private Double accountsReceivableBoy;
+    private Double totalAssetsBoy;
+    private Double accountsPayableBoy;
+    private Double taxPayableBoy;
+    private Double totalLiabilitiesBoy;
+    private Double ownerEquityBoy;
+    private Double totalEquityBoy;
+    private Double totalLiabilitiesAndEquityBoy;
+
     private List<TransactionDTO> transactions;
     private Integer transactionCount;
 }

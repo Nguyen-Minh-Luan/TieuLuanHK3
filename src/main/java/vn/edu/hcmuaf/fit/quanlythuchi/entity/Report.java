@@ -104,4 +104,32 @@ public class Report {
     /** Mã 500: Tổng nguồn vốn = 300 + 400 */
     @Column(name = "total_liabilities_and_equity")
     private Double totalLiabilitiesAndEquity;
+
+    // ── Số đầu năm (Beginning of Year) ──────────────────────────
+    @Column(name = "cash_and_equivalents_boy")
+    private Double cashAndEquivalentsBoy;       // Mã 110 - Đầu năm
+
+    @Column(name = "accounts_receivable_boy")
+    private Double accountsReceivableBoy;       // Mã 120 - Đầu năm
+
+    @Column(name = "total_assets_boy")
+    private Double totalAssetsBoy;              // Mã 200 - Đầu năm
+
+    @Column(name = "accounts_payable_boy")
+    private Double accountsPayableBoy;          // Mã 310 - Đầu năm
+
+    @Column(name = "tax_payable_boy")
+    private Double taxPayableBoy;               // Mã 320 - Đầu năm
+
+    @Column(name = "total_liabilities_boy")
+    private Double totalLiabilitiesBoy;         // Mã 300 - Đầu năm
+
+    @Column(name = "owner_equity_boy")
+    private Double ownerEquityBoy;              // Mã 410 - Đầu năm
+
+    @Column(name = "total_equity_boy")
+    private Double totalEquityBoy;              // Mã 400 - Đầu năm
+
+    @Column(name = "total_liabilities_and_equity_boy")
+    private Double totalLiabilitiesAndEquityBoy;// Mã 500 - Đầu năm
 }
