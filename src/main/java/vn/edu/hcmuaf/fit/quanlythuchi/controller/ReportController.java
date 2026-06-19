@@ -4,10 +4,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import vn.edu.hcmuaf.fit.quanlythuchi.config.ApiResponse;
+import vn.edu.hcmuaf.fit.quanlythuchi.dto.PagedResponseDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.ReportDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.ReportResponseDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.service.report.ReportService;
+import org.springframework.format.annotation.DateTimeFormat;
 
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -59,12 +62,28 @@ public class ReportController {
     }
 
     /**
-     * Lấy toàn bộ danh sách báo cáo chưa bị xóa.
+     * Lấy toàn bộ danh sách báo cáo chưa bị xóa (phân trang & tìm kiếm).
      * GET /reports
      */
     @GetMapping
-    public ResponseEntity<ApiResponse<List<ReportResponseDTO>>> getAllReports() {
-        return ApiResponse.ok(reportService.getAllReports());
+    public ResponseEntity<ApiResponse<PagedResponseDTO<ReportResponseDTO>>> getAllReports(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long createdBy,
+            @RequestParam(required = false)
+                @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date fromDate,
+            @RequestParam(required = false)
+                @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date toDate,
+            @RequestParam(defaultValue = "1")         int page,
+            @RequestParam(defaultValue = "10")        int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc")      String sortDir) {
+        return ApiResponse.ok(
+            PagedResponseDTO.from(
+                reportService.getAllReports(
+                    keyword, type, status, createdBy, fromDate, toDate,
+                    page, size, sortBy, sortDir)));
     }
 
     /**

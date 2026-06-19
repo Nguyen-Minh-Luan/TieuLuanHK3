@@ -1,6 +1,10 @@
 package vn.edu.hcmuaf.fit.quanlythuchi.service.debt;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.DebtDTO;
@@ -158,6 +162,18 @@ public class DebtServiceImpl implements DebtService {
     public List<DebtDTO> getAllDebts() {
         return debtRepository.findByIsDeletedFalse()
                 .stream().map(this::toDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<DebtDTO> getAllDebts(String keyword, String debtType, Boolean isPaid,
+                                      int page, int size, String sortBy, String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase("ASC")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size, sort);
+        return debtRepository.searchDebts(keyword, debtType, isPaid, pageable)
+                             .map(this::toDTO);
     }
 
     @Override

@@ -1,7 +1,10 @@
 package vn.edu.hcmuaf.fit.quanlythuchi.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.Debt;
 
@@ -38,9 +41,27 @@ public interface DebtRepository extends JpaRepository<Debt, Long> {
     Double getTotalRemainingReceivable();
 
     /**
-     * Tính tổng số tiền mình còn phải trả (PAYABLE, chưa trả xong).
+     * Tính tổng số tiền nợ còn phải trả (PAYABLE, chưa trả xong).
      */
     @Query("SELECT COALESCE(SUM(d.totalAmount - d.paidAmount), 0.0) FROM Debt d " +
            "WHERE d.debtType = 'PAYABLE' AND d.isPaid = false AND d.isDeleted = false")
     Double getTotalRemainingPayable();
+
+    /**
+     * Tìm kiếm khoản nợ có phân trang, hỗ trợ keyword và bộ lọc động
+     */
+    @Query("SELECT d FROM Debt d " +
+           "WHERE d.isDeleted = false AND " +
+           "(:keyword IS NULL OR " +
+           "  LOWER(d.debtType) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "  LOWER(d.note)     LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "  LOWER(d.partner.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
+           "(:debtType IS NULL OR d.debtType = :debtType) AND " +
+           "(:isPaid   IS NULL OR d.isPaid   = :isPaid)")
+    Page<Debt> searchDebts(
+            @Param("keyword")  String keyword,
+            @Param("debtType") String debtType,
+            @Param("isPaid")   Boolean isPaid,
+            Pageable pageable
+    );
 }

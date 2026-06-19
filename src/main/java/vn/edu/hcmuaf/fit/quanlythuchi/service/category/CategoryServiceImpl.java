@@ -1,5 +1,9 @@
 package vn.edu.hcmuaf.fit.quanlythuchi.service.category;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.CategoryDTO;
@@ -25,6 +29,18 @@ public class CategoryServiceImpl implements CategoryService{
         return rootCategories.stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<CategoryDTO> getAllCategories(String keyword, CategoryType type, Long parentId,
+                                             int page, int size, String sortBy, String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase("ASC")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size, sort);
+        return categoryRepository.searchCategories(keyword, type, parentId, pageable)
+                                 .map(this::mapToDTO);
     }
 
     @Override

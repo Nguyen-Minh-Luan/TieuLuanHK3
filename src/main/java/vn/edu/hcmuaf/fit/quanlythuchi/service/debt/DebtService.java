@@ -1,5 +1,6 @@
 package vn.edu.hcmuaf.fit.quanlythuchi.service.debt;
 
+import org.springframework.data.domain.Page;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.DebtDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.Debt;
 
@@ -22,6 +23,9 @@ public interface DebtService {
 
     /** Lấy tất cả khoản nợ */
     List<DebtDTO> getAllDebts();
+
+    Page<DebtDTO> getAllDebts(String keyword, String debtType, Boolean isPaid,
+                              int page, int size, String sortBy, String sortDir);
 
     /** Lấy khoản nợ theo loại: RECEIVABLE hoặc PAYABLE */
     List<DebtDTO> getDebtsByType(String debtType);

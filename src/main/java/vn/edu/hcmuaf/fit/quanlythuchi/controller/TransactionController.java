@@ -5,13 +5,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import vn.edu.hcmuaf.fit.quanlythuchi.config.ApiResponse;
+import vn.edu.hcmuaf.fit.quanlythuchi.dto.PagedResponseDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.SpendingWarningDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.TransactionDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.TransactionWithWarningDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.Transaction;
 import vn.edu.hcmuaf.fit.quanlythuchi.service.transaction.TransactionService;
 import vn.edu.hcmuaf.fit.quanlythuchi.service.warning.SpendingWarningService;
+import org.springframework.format.annotation.DateTimeFormat;
 
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -112,7 +115,26 @@ public class TransactionController {
 //        return ResponseEntity.ok(transactions);
 //    }
     @GetMapping
-    public ResponseEntity<ApiResponse<List<TransactionDTO>>> getAllTransactions() {
-        return ApiResponse.ok(transactionService.getAllTransactions());
+    public ResponseEntity<ApiResponse<PagedResponseDTO<TransactionDTO>>> getAllTransactions(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long fundId,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Long partnerId,
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false)
+                @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date fromDate,
+            @RequestParam(required = false)
+                @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date toDate,
+            @RequestParam(defaultValue = "1")                int page,
+            @RequestParam(defaultValue = "10")               int size,
+            @RequestParam(defaultValue = "transaction_date") String sortBy,
+            @RequestParam(defaultValue = "desc")             String sortDir) {
+        return ApiResponse.ok(
+            PagedResponseDTO.from(
+                transactionService.getAllTransactions(
+                    keyword, type, status, fundId, categoryId, partnerId, userId,
+                    fromDate, toDate, page, size, sortBy, sortDir)));
     }
 }

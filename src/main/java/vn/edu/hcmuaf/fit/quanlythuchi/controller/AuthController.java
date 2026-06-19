@@ -1,12 +1,11 @@
 package vn.edu.hcmuaf.fit.quanlythuchi.controller;
 
-
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import vn.edu.hcmuaf.fit.quanlythuchi.config.ApiResponse;
+import vn.edu.hcmuaf.fit.quanlythuchi.dto.PagedResponseDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.UserResponseDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.User;
 import vn.edu.hcmuaf.fit.quanlythuchi.service.auth.AuthService;
@@ -53,4 +52,22 @@ public class AuthController {
             return ApiResponse.error(e.getMessage(), "UPDATE_FAILED");
         }
     }
+
+    /**
+     * GET /auth/user — Lấy danh sách người dùng có phân trang (chỉ ADMIN).
+     */
+    @GetMapping("/user")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<ApiResponse<PagedResponseDTO<UserResponseDTO>>> getAllUsers(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Integer role,
+            @RequestParam(defaultValue = "1")        int page,
+            @RequestParam(defaultValue = "10")       int size,
+            @RequestParam(defaultValue = "username") String sortBy,
+            @RequestParam(defaultValue = "asc")      String sortDir) {
+        return ApiResponse.ok(
+                PagedResponseDTO.from(
+                        authService.getAllUsers(keyword, role, page, size, sortBy, sortDir)));
+    }
 }
+

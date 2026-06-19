@@ -1,9 +1,11 @@
 package vn.edu.hcmuaf.fit.quanlythuchi.service.report;
 
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.ReportDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.ReportResponseDTO;
 
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -23,6 +25,10 @@ public interface ReportService {
 
     /** Lấy tất cả báo cáo chưa bị xóa */
     List<ReportResponseDTO> getAllReports();
+
+    Page<ReportResponseDTO> getAllReports(String keyword, String type, String status,
+                                          Long createdBy, Date fromDate, Date toDate,
+                                          int page, int size, String sortBy, String sortDir);
 
     /** Lấy báo cáo theo loại */
     List<ReportResponseDTO> getReportsByType(String type);

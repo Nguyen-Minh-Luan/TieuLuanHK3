@@ -1,5 +1,7 @@
 package vn.edu.hcmuaf.fit.quanlythuchi.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -114,4 +116,24 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
         "AND t.transaction_date <= :boyEnd",
         nativeQuery = true)
     Double sumTaxExpenseUpTo(@Param("boyEnd") Date boyEnd);
+
+    @Query("SELECT r FROM Report r " +
+           "WHERE r.isDeleted = false AND " +
+           "(:keyword IS NULL OR " +
+           "  LOWER(r.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "  LOWER(r.note)  LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
+           "(:type      IS NULL OR r.type           = :type) AND " +
+           "(:status    IS NULL OR r.status         = :status) AND " +
+           "(:createdBy IS NULL OR r.createdBy.id   = :createdBy) AND " +
+           "(:fromDate  IS NULL OR r.fromDate       >= :fromDate) AND " +
+           "(:toDate    IS NULL OR r.toDate         <= :toDate)")
+    Page<Report> searchReports(
+        @Param("keyword")   String keyword,
+        @Param("type")      String type,
+        @Param("status")    String status,
+        @Param("createdBy") Long createdBy,
+        @Param("fromDate")  java.util.Date fromDate,
+        @Param("toDate")    java.util.Date toDate,
+        Pageable pageable
+    );
 }
