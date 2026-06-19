@@ -92,4 +92,26 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     // Tổng vốn đầu tư ban đầu (initialBalance của tất cả Fund)
     @Query("SELECT COALESCE(SUM(f.initialBalance), 0.0) FROM Fund f WHERE f.isDeleted = false")
     Double getTotalInitialCapital();
+
+    // Tổng nợ phải thu tại thời điểm đầu năm
+    @Query("SELECT COALESCE(SUM(d.totalAmount - d.paidAmount), 0.0) FROM Debt d " +
+           "WHERE d.debtType = 'RECEIVABLE' AND d.isPaid = false AND d.isDeleted = false " +
+           "AND d.debtDate <= :boyEnd")
+    Double sumReceivableUpTo(@Param("boyEnd") Date boyEnd);
+
+    // Tổng nợ phải trả tại thời điểm đầu năm
+    @Query("SELECT COALESCE(SUM(d.totalAmount - d.paidAmount), 0.0) FROM Debt d " +
+           "WHERE d.debtType = 'PAYABLE' AND d.isPaid = false AND d.isDeleted = false " +
+           "AND d.debtDate <= :boyEnd")
+    Double sumPayableUpTo(@Param("boyEnd") Date boyEnd);
+
+    // Tổng chi phí thuế tính lũy kế đến đầu năm
+    @Query(value =
+        "SELECT COALESCE(SUM(t.amount), 0.0) FROM transactions t " +
+        "JOIN categories c ON t.categories_id = c.id " +
+        "WHERE t.type = 'EXPENSE' AND t.status = 'ACTIVE' " +
+        "AND c.tax IS NOT NULL AND c.tax > 0 " +
+        "AND t.transaction_date <= :boyEnd",
+        nativeQuery = true)
+    Double sumTaxExpenseUpTo(@Param("boyEnd") Date boyEnd);
 }

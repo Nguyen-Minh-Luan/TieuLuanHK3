@@ -14,6 +14,7 @@ import vn.edu.hcmuaf.fit.quanlythuchi.repository.UserRepository;
 import vn.edu.hcmuaf.fit.quanlythuchi.repository.FundRepository;
 import vn.edu.hcmuaf.fit.quanlythuchi.service.transaction.TransactionService;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -188,7 +189,29 @@ public class ReportServiceImpl implements ReportService {
      * và ghi thẳng vào các field của Report entity để chuẩn bị save xuống DB.
      * Phương thức này dùng chung cho createReport(), updateReport(), recalculate().
      */
+    /**
+     * Tính ngày 31/12 của năm trước fromDate (làm mốc "boyEnd" để query số đầu năm).
+     * Ví dụ: fromDate = 01/03/2025 → boyEnd = 31/12/2024
+     */
+    private Date getBeginningOfYearEnd(Date fromDate) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(fromDate);
+        cal.set(Calendar.YEAR, cal.get(Calendar.YEAR) - 1);
+        cal.set(Calendar.MONTH, Calendar.DECEMBER);
+        cal.set(Calendar.DAY_OF_MONTH, 31);
+        cal.set(Calendar.HOUR_OF_DAY, 23);
+        cal.set(Calendar.MINUTE, 59);
+        cal.set(Calendar.SECOND, 59);
+        return cal.getTime();
+    }
+
+    /**
+     * Tính toán các chỉ tiêu bảng cân đối kế toán (mã 110–500)
+     * và ghi thẳng vào các field của Report entity để chuẩn bị save xuống DB.
+     * Phương thức này dùng chung cho createReport(), updateReport(), recalculate().
+     */
     private void applyBalanceSheet(Report report) {
+        // ── Số cuối năm (End of Period) ──────────────────────────────
         Double cash           = safeDouble(fundRepository.getTotalFundBalance().orElse(0.0));
         Double initialCapital = safeDouble(reportRepository.getTotalInitialCapital());
         Double receivable     = 0.0;
@@ -215,6 +238,33 @@ public class ReportServiceImpl implements ReportService {
         report.setOwnerEquity(initialCapital);
         report.setTotalEquity(totalEquity);
         report.setTotalLiabilitiesAndEquity(totalLiabAndEq);
+
+        // ── Số đầu năm (Beginning of Year) ──────────────────────────
+        if (report.getFromDate() != null) {
+            Date boyEnd = getBeginningOfYearEnd(report.getFromDate());
+
+            Double cashBoy       = safeDouble(fundRepository.getTotalFundBalance().orElse(0.0));
+            // Ghi chú: Fund không lưu snapshot lịch sử → dùng initialBalance làm vốn đầu năm
+            Double initialCapBoy = safeDouble(reportRepository.getTotalInitialCapital());
+            Double receivableBoy = safeDouble(reportRepository.sumReceivableUpTo(boyEnd));
+            Double payableBoy    = safeDouble(reportRepository.sumPayableUpTo(boyEnd));
+            Double taxBoy        = safeDouble(reportRepository.sumTaxExpenseUpTo(boyEnd));
+
+            Double totalAssetsBoy      = cashBoy + receivableBoy;
+            Double totalLiabilitiesBoy = payableBoy + taxBoy;
+            Double totalEquityBoy      = initialCapBoy;
+            Double totalLiabAndEqBoy   = totalLiabilitiesBoy + totalEquityBoy;
+
+            report.setCashAndEquivalentsBoy(cashBoy);
+            report.setAccountsReceivableBoy(receivableBoy);
+            report.setTotalAssetsBoy(totalAssetsBoy);
+            report.setAccountsPayableBoy(payableBoy);
+            report.setTaxPayableBoy(taxBoy);
+            report.setTotalLiabilitiesBoy(totalLiabilitiesBoy);
+            report.setOwnerEquityBoy(initialCapBoy);
+            report.setTotalEquityBoy(totalEquityBoy);
+            report.setTotalLiabilitiesAndEquityBoy(totalLiabAndEqBoy);
+        }
     }
 
     private Report findActiveReport(Long id) {
@@ -276,6 +326,15 @@ public class ReportServiceImpl implements ReportService {
                 .ownerEquity(report.getOwnerEquity())
                 .totalEquity(report.getTotalEquity())
                 .totalLiabilitiesAndEquity(report.getTotalLiabilitiesAndEquity())
+                .cashAndEquivalentsBoy(report.getCashAndEquivalentsBoy())
+                .accountsReceivableBoy(report.getAccountsReceivableBoy())
+                .totalAssetsBoy(report.getTotalAssetsBoy())
+                .accountsPayableBoy(report.getAccountsPayableBoy())
+                .taxPayableBoy(report.getTaxPayableBoy())
+                .totalLiabilitiesBoy(report.getTotalLiabilitiesBoy())
+                .ownerEquityBoy(report.getOwnerEquityBoy())
+                .totalEquityBoy(report.getTotalEquityBoy())
+                .totalLiabilitiesAndEquityBoy(report.getTotalLiabilitiesAndEquityBoy())
                 .build();
 
         if (isIncludeDetails && report.getFromDate() != null && report.getToDate() != null) {
