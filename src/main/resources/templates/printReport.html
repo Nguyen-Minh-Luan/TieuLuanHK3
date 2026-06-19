@@ -181,11 +181,11 @@
             <h1 th:text="${report.title}">BÁO CÁO TÌNH HÌNH TÀI CHÍNH</h1>
             <p>
                 Tại ngày
-                <span th:text="${#dates.format(report.toDate, 'dd')}">31</span>
+                <span th:text="${#dates.format(report.toDate, 'dd')}"></span>
                 tháng
-                <span th:text="${#dates.format(report.toDate, 'MM')}">12</span>
+                <span th:text="${#dates.format(report.toDate, 'MM')}"></span>
                 năm
-                <span th:text="${#dates.format(report.toDate, 'yyyy')}">2025</span>
+                <span th:text="${#dates.format(report.toDate, 'yyyy')}"></span>
             </p>
             <p style="font-style: italic;">Đơn vị tính: Đồng Việt Nam (VND)</p>
         </div>
@@ -345,8 +345,8 @@
             </tr>
             <tr class="font-bold">
                 <td th:text="${createdByName}">Người lập</td>
-                <td>Nguyễn Thị Hương</td>
-                <td>Lê Hoàng Nam</td>
+                <td></td>
+                <td></td>
             </tr>
         </table>
 
