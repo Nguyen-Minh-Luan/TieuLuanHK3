@@ -42,6 +42,7 @@ public class DebtServiceImpl implements DebtService {
         debt.setPaidAmount(0.0);    // Luôn bắt đầu từ 0
         debt.setIsPaid(false);      // Luôn chưa trả khi mới tạo
         debt.setPaymentDate(null);
+        debt.setTitle(request.getTitle());
         debt.setNote(request.getNote());
         debt.setIsDeleted(false);
         debt.setCreatedAt(new Date());
@@ -81,7 +82,9 @@ public class DebtServiceImpl implements DebtService {
             throw new RuntimeException(
                     "Không thể chỉnh sửa khoản nợ đã thanh toán xong (ID: " + id + ")");
         }
-
+        if (request.getTitle() != null) {
+            debt.setTitle(request.getTitle());
+        }
         if (request.getNote() != null) {
             debt.setNote(request.getNote());
         }
@@ -271,6 +274,9 @@ public class DebtServiceImpl implements DebtService {
         if (request.getUserId() == null) {
             throw new IllegalArgumentException("Cần cung cấp ID người lập khoản nợ");
         }
+        if (request.getTitle() == null || request.getTitle().trim().isEmpty()) {
+            throw new IllegalArgumentException("Tiêu đề khoản nợ không được để trống!");
+        }
     }
 
     private void validateDebtType(String debtType) {
@@ -317,6 +323,7 @@ public class DebtServiceImpl implements DebtService {
                 .categoryName(debt.getCategory() != null ? debt.getCategory().getName() : null)
                 .userId(debt.getUser() != null ? debt.getUser().getId() : null)
                 .createdByName(debt.getUser() != null ? debt.getUser().getFullName() : null)
+                .title(debt.getTitle())
                 .note(debt.getNote())
                 .createdAt(debt.getCreatedAt())
                 .updatedAt(debt.getUpdatedAt())
