@@ -1,6 +1,10 @@
 package vn.edu.hcmuaf.fit.quanlythuchi.service.debt;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.DebtDTO;
@@ -38,6 +42,7 @@ public class DebtServiceImpl implements DebtService {
         debt.setPaidAmount(0.0);    // Luôn bắt đầu từ 0
         debt.setIsPaid(false);      // Luôn chưa trả khi mới tạo
         debt.setPaymentDate(null);
+        debt.setTitle(request.getTitle());
         debt.setNote(request.getNote());
         debt.setIsDeleted(false);
         debt.setCreatedAt(new Date());
@@ -77,7 +82,9 @@ public class DebtServiceImpl implements DebtService {
             throw new RuntimeException(
                     "Không thể chỉnh sửa khoản nợ đã thanh toán xong (ID: " + id + ")");
         }
-
+        if (request.getTitle() != null) {
+            debt.setTitle(request.getTitle());
+        }
         if (request.getNote() != null) {
             debt.setNote(request.getNote());
         }
@@ -158,6 +165,18 @@ public class DebtServiceImpl implements DebtService {
     public List<DebtDTO> getAllDebts() {
         return debtRepository.findByIsDeletedFalse()
                 .stream().map(this::toDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<DebtDTO> getAllDebts(String keyword, String debtType, Boolean isPaid,
+                                      int page, int size, String sortBy, String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase("ASC")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size, sort);
+        return debtRepository.searchDebts(keyword, debtType, isPaid, pageable)
+                             .map(this::toDTO);
     }
 
     @Override
@@ -255,6 +274,9 @@ public class DebtServiceImpl implements DebtService {
         if (request.getUserId() == null) {
             throw new IllegalArgumentException("Cần cung cấp ID người lập khoản nợ");
         }
+        if (request.getTitle() == null || request.getTitle().trim().isEmpty()) {
+            throw new IllegalArgumentException("Tiêu đề khoản nợ không được để trống!");
+        }
     }
 
     private void validateDebtType(String debtType) {
@@ -301,6 +323,7 @@ public class DebtServiceImpl implements DebtService {
                 .categoryName(debt.getCategory() != null ? debt.getCategory().getName() : null)
                 .userId(debt.getUser() != null ? debt.getUser().getId() : null)
                 .createdByName(debt.getUser() != null ? debt.getUser().getFullName() : null)
+                .title(debt.getTitle())
                 .note(debt.getNote())
                 .createdAt(debt.getCreatedAt())
                 .updatedAt(debt.getUpdatedAt())

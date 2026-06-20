@@ -2,6 +2,10 @@ package vn.edu.hcmuaf.fit.quanlythuchi.service.auth;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import vn.edu.hcmuaf.fit.quanlythuchi.config.JwtUtil;
@@ -49,19 +53,21 @@ public class AuthServiceImpl implements AuthService{
     @Override
     public UserResponseDTO checkLogin(String username, String password) {
         Optional<User> optionalUser = authRepo.findByUsername(username);
-        UserResponseDTO urdto = new UserResponseDTO();
         if (optionalUser.isPresent()) {
             User u = optionalUser.get();
             if(u.getIsDeleted()){
                 throw new RuntimeException("Tài khoản đã bị xoá");
             }
-            urdto.setUsername(u.getUsername());
-            urdto.setFullName(u.getFullName());
-                String hashedPassword = hashMachine.encode(password);
-                if (username.equals(u.getUsername()) && hashMachine.matches(password, u.getPassword())) {
-                    urdto.setToken(jwt.generateToken(u));
-                    return urdto;
-                }
+            if (username.equals(u.getUsername()) && hashMachine.matches(password, u.getPassword())) {
+                return UserResponseDTO.builder()
+                        .id(u.getId())
+                        .username(u.getUsername())
+                        .fullName(u.getFullName())
+                        .email(u.getEmail())
+                        .role(u.getRole())
+                        .token(jwt.generateToken(u))
+                        .build();
+            }
         }
         throw new RuntimeException("Đăng Nhập thất bại");
     }
@@ -103,5 +109,28 @@ public class AuthServiceImpl implements AuthService{
         } catch (Exception e) {
             throw new RuntimeException("Lỗi cập nhật: Có thể do trùng Email hoặc Username! " + e.getMessage());
         }
+    }
+
+    @Override
+    @Transactional
+    public Page<UserResponseDTO> getAllUsers(String keyword, Integer role,
+                                            int page, int size, String sortBy, String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase("ASC")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size, sort);
+        return authRepo.searchUsers(keyword, role, pageable)
+                       .map(this::toUserResponseDTO);
+    }
+
+    /** Helper mapper: User entity → UserResponseDTO (dùng cho danh sách admin) */
+    private UserResponseDTO toUserResponseDTO(User u) {
+        return UserResponseDTO.builder()
+                .id(u.getId())
+                .username(u.getUsername())
+                .fullName(u.getFullName())
+                .email(u.getEmail())
+                .role(u.getRole())
+                .build();
     }
 }

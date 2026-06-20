@@ -1,5 +1,7 @@
 package vn.edu.hcmuaf.fit.quanlythuchi.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -58,4 +60,31 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     /** Lấy tất cả phiếu thu/chi đã thanh toán cho một khoản nợ theo trạng thái */
     List<Transaction> findByDebt_IdAndStatus(Long debtId, String status);
+
+    @Query("SELECT t FROM Transaction t " +
+           "WHERE " +
+           "(:keyword IS NULL OR " +
+           "  LOWER(t.transaction_code) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "  LOWER(t.note)             LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "  LOWER(t.reason)           LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
+           "(:type       IS NULL OR t.type            = :type) AND " +
+           "(:status     IS NULL OR t.status          = :status) AND " +
+           "(:fundId     IS NULL OR t.fund.id         = :fundId) AND " +
+           "(:categoryId IS NULL OR t.categories.id   = :categoryId) AND " +
+           "(:partnerId  IS NULL OR t.partner.id      = :partnerId) AND " +
+           "(:userId     IS NULL OR t.user.id         = :userId) AND " +
+           "(:fromDate   IS NULL OR t.transaction_date >= :fromDate) AND " +
+           "(:toDate     IS NULL OR t.transaction_date <= :toDate)")
+    Page<Transaction> searchTransactions(
+        @Param("keyword")    String keyword,
+        @Param("type")       String type,
+        @Param("status")     String status,
+        @Param("fundId")     Long fundId,
+        @Param("categoryId") Long categoryId,
+        @Param("partnerId")  Long partnerId,
+        @Param("userId")     Long userId,
+        @Param("fromDate")   java.util.Date fromDate,
+        @Param("toDate")     java.util.Date toDate,
+        Pageable pageable
+    );
 }

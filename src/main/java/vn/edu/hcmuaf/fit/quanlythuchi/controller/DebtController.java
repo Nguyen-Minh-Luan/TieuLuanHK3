@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import vn.edu.hcmuaf.fit.quanlythuchi.config.ApiResponse;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.DebtDTO;
+import vn.edu.hcmuaf.fit.quanlythuchi.dto.PagedResponseDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.service.debt.DebtService;
 
 import java.util.List;
@@ -43,10 +44,19 @@ public class DebtController {
         return ApiResponse.ok(debtService.getDebtById(id));
     }
 
-    /** GET /debts — Lấy tất cả khoản nợ */
+    /** GET /debts — Lấy danh sách đối tác có phân trang và tìm kiếm */
     @GetMapping
-    public ResponseEntity<ApiResponse<List<DebtDTO>>> getAllDebts() {
-        return ApiResponse.ok(debtService.getAllDebts());
+    public ResponseEntity<ApiResponse<PagedResponseDTO<DebtDTO>>> getAllDebts(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String debtType,
+            @RequestParam(required = false) Boolean isPaid,
+            @RequestParam(defaultValue = "1")         int page,
+            @RequestParam(defaultValue = "10")        int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc")      String sortDir) {
+        return ApiResponse.ok(
+                PagedResponseDTO.from(
+                        debtService.getAllDebts(keyword, debtType, isPaid, page, size, sortBy, sortDir)));
     }
 
     /** GET /debts/type/{debtType} — Lấy theo loại (RECEIVABLE | PAYABLE) */

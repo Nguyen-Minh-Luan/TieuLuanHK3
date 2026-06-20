@@ -29,6 +29,9 @@ public class DebtDTO {
     private String categoryName;
     private String createdByName;
 
+
+
+    private String title;
     private String note;
     private Date createdAt;
     private Date updatedAt;

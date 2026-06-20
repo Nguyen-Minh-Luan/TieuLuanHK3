@@ -1,11 +1,12 @@
 package vn.edu.hcmuaf.fit.quanlythuchi.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import vn.edu.hcmuaf.fit.quanlythuchi.config.ApiResponse;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.CategoryDTO;
+import vn.edu.hcmuaf.fit.quanlythuchi.dto.PagedResponseDTO;
+import vn.edu.hcmuaf.fit.quanlythuchi.entity.CategoryType;
 import vn.edu.hcmuaf.fit.quanlythuchi.service.category.CategoryService;
 
 import java.util.List;
@@ -19,12 +20,34 @@ public class CategoryController {
 
     /**
      * API: Lấy danh sách toàn bộ hạng mục theo dạng cây (Cha - Con)
+     * Dùng cho dropdown/tree renderer — KHÔNG phân trang.
      * Method: GET
      * URL: http://localhost:8080/categories/tree
      */
     @GetMapping("/tree")
     public ResponseEntity<ApiResponse<List<CategoryDTO>>> getCategoryTree() {
         return ApiResponse.ok(categoryService.getCategoryTree());
+    }
+
+    /**
+     * API: Lấy danh sách hạng mục phẳng có phân trang và tìm kiếm
+     * Method: GET
+     * URL: http://localhost:8080/categories
+     */
+    @GetMapping
+    public ResponseEntity<ApiResponse<PagedResponseDTO<CategoryDTO>>> getAllCategories(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) Long parentId,
+            @RequestParam(defaultValue = "1")    int page,
+            @RequestParam(defaultValue = "10")   int size,
+            @RequestParam(defaultValue = "name") String sortBy,
+            @RequestParam(defaultValue = "asc")  String sortDir) {
+        CategoryType categoryType = (type != null) ? CategoryType.valueOf(type.toUpperCase()) : null;
+        return ApiResponse.ok(
+                PagedResponseDTO.from(
+                        categoryService.getAllCategories(keyword, categoryType, parentId,
+                                                        page, size, sortBy, sortDir)));
     }
 
     /**
@@ -39,7 +62,7 @@ public class CategoryController {
 
     /**
      * API: Cập nhật thông tin một hạng mục đã có
-     * Method: PUT
+     * Method: PATCH
      * URL: http://localhost:8080/categories/{id}
      */
     @PatchMapping("/{id}")
@@ -59,4 +82,4 @@ public class CategoryController {
         categoryService.deleteCategory(id);
         return ApiResponse.ok(null, "Xóa hạng mục thành công");
     }
-}
+}

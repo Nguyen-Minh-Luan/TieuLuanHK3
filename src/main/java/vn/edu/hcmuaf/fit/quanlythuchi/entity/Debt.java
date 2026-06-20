@@ -50,8 +50,9 @@ public class Debt {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @Column(name = "title")
+    private String title;
     private String note;
-
     @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted = false;
 

@@ -1,15 +1,12 @@
 package vn.edu.hcmuaf.fit.quanlythuchi.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import vn.edu.hcmuaf.fit.quanlythuchi.config.ApiResponse;
+import vn.edu.hcmuaf.fit.quanlythuchi.dto.PagedResponseDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.PartnerDTO;
-import vn.edu.hcmuaf.fit.quanlythuchi.entity.Partner;
 import vn.edu.hcmuaf.fit.quanlythuchi.service.partner.PartnerService;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/partners")
@@ -18,9 +15,18 @@ public class PartnerController {
 
     private final PartnerService partnerService;
 
+    /** GET /partners — Lấy danh sách đối tác có phân trang và tìm kiếm */
     @GetMapping
-    public ResponseEntity<ApiResponse<List<PartnerDTO>>> getAllPartners() {
-        return ApiResponse.ok(partnerService.getAllPartners());
+    public ResponseEntity<ApiResponse<PagedResponseDTO<PartnerDTO>>> getAllPartners(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String type,
+            @RequestParam(defaultValue = "1")    int page,
+            @RequestParam(defaultValue = "10")   int size,
+            @RequestParam(defaultValue = "name") String sortBy,
+            @RequestParam(defaultValue = "asc")  String sortDir) {
+        return ApiResponse.ok(
+                PagedResponseDTO.from(
+                        partnerService.getAllPartners(keyword, type, page, size, sortBy, sortDir)));
     }
 
     @GetMapping("/{id}")
@@ -45,4 +51,4 @@ public class PartnerController {
         partnerService.deletePartner(id);
         return ApiResponse.ok(null, "Xóa đối tác thành công");
     }
-}
+}

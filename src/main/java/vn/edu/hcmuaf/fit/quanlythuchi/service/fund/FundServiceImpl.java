@@ -3,6 +3,10 @@ package vn.edu.hcmuaf.fit.quanlythuchi.service.fund;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.FundDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.Fund;
@@ -124,6 +128,18 @@ public class FundServiceImpl implements FundService {
         }
     }
 
+
+    @Override
+    @Transactional
+    public Page<FundDTO> getAllFunds(String keyword, String type, String status,
+                                    int page, int size, String sortBy, String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase("ASC")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size, sort);
+        return fundRepository.searchFunds(keyword, type, status, pageable)
+                             .map(this::toDTO);
+    }
 
     private FundDTO toDTO(Fund fund) {
         return FundDTO.builder()
