@@ -26,16 +26,17 @@ public class TransactionController {
     private final SpendingWarningService spendingWarningService;
 
     // --- 1. TẠO MỚI GIAO DỊCH ---
-//    @PostMapping
-//    public ResponseEntity<Transaction> createTransaction(@RequestBody TransactionDTO requestDTO) {
-//        Transaction newTransaction = transactionService.createTransaction(requestDTO);
-//        return ResponseEntity.status(HttpStatus.CREATED).body(newTransaction);
-//    }
+    // @PostMapping
+    // public ResponseEntity<Transaction> createTransaction(@RequestBody
+    // TransactionDTO requestDTO) {
+    // Transaction newTransaction =
+    // transactionService.createTransaction(requestDTO);
+    // return ResponseEntity.status(HttpStatus.CREATED).body(newTransaction);
+    // }
     // --- 1. TẠO MỚI GIAO DỊCH (tích hợp cảnh báo chi tiêu thông minh) ---
     @PostMapping
     public ResponseEntity<ApiResponse<TransactionWithWarningDTO>> createTransaction(
             @RequestBody TransactionDTO requestDTO) {
-
 
         // Bước 1: Phân tích cảnh báo TRƯỚC KHI lưu
         SpendingWarningDTO warning = null;
@@ -46,7 +47,7 @@ public class TransactionController {
             // Bước 2: Nếu có cảnh báo → đánh dấu isOverBudget trước khi lưu
             if (warning != null && warning.isHasWarning()) {
                 requestDTO.setHasWarning(true);
-            }else{
+            } else {
                 requestDTO.setHasWarning(false);
             }
         }
@@ -69,7 +70,8 @@ public class TransactionController {
 
         return ApiResponse.created(result, responseMessage);
     }
-        @GetMapping("/categories/{categoryId}")
+
+    @GetMapping("/categories/{categoryId}")
     public ResponseEntity<ApiResponse<SpendingWarningDTO>> checkWarningByCategory(
             @PathVariable Long categoryId) {
         SpendingWarningDTO warning = spendingWarningService.analyze(categoryId);
@@ -77,18 +79,22 @@ public class TransactionController {
     }
 
     // --- 2. CẬP NHẬT GIAO DỊCH (Tạo mới bản ghi, bản cũ thành UPDATED) ---
-//    @PutMapping("/{id}")
-//    public ResponseEntity<Transaction> updateTransaction(@PathVariable Long id, @RequestBody TransactionDTO requestDTO) {
-//        Transaction updatedTransaction = transactionService.updateTransaction(id, requestDTO);
-//        return ResponseEntity.ok(updatedTransaction);
-//    }
+    // @PutMapping("/{id}")
+    // public ResponseEntity<Transaction> updateTransaction(@PathVariable Long id,
+    // @RequestBody TransactionDTO requestDTO) {
+    // Transaction updatedTransaction = transactionService.updateTransaction(id,
+    // requestDTO);
+    // return ResponseEntity.ok(updatedTransaction);
+    // }
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<TransactionDTO>> updateTransaction(
             @PathVariable Long id,
             @RequestBody TransactionDTO requestDTO) {
         return ApiResponse.ok(transactionService.updateTransaction(id, requestDTO), "Cập nhật giao dịch thành công");
     }
-    // --- 3. HỦY GIAO DỊCH (Admin chuyển trạng thái thành CANCELLED và hoàn tiền) ---
+
+    // --- 3. HỦY GIAO DỊCH (Admin chuyển trạng thái thành CANCELLED và hoàn tiền)
+    // ---
     // Dùng PATCH vì chúng ta chỉ thay đổi trạng thái chứ không xóa cứng (DELETE)
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> cancelTransaction(@PathVariable Long id) {
@@ -97,23 +103,25 @@ public class TransactionController {
     }
 
     // --- 4. LẤY CHI TIẾT 1 GIAO DỊCH ---
-//    @GetMapping("/{id}")
-//    public ResponseEntity<Transaction> getTransactionById(@PathVariable Long id) {
-//        // Giả định bạn đã viết hàm getTransactionById trong ServiceImpl
-//        Transaction transaction = transactionService.getTransactionById(id);
-//        return ResponseEntity.ok(transaction);
-//    }
+    // @GetMapping("/{id}")
+    // public ResponseEntity<Transaction> getTransactionById(@PathVariable Long id)
+    // {
+    // // Giả định bạn đã viết hàm getTransactionById trong ServiceImpl
+    // Transaction transaction = transactionService.getTransactionById(id);
+    // return ResponseEntity.ok(transaction);
+    // }
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<TransactionDTO>> getTransactionById(@PathVariable Long id) {
         return ApiResponse.ok(transactionService.getTransactionById(id));
     }
+
     // --- 5. LẤY DANH SÁCH GIAO DỊCH ---
-//    @GetMapping
-//    public ResponseEntity<List<Transaction>> getAllTransactions() {
-//        // Giả định bạn đã viết hàm getAllTransactions trong ServiceImpl
-//        List<Transaction> transactions = transactionService.getAllTransactions();
-//        return ResponseEntity.ok(transactions);
-//    }
+    // @GetMapping
+    // public ResponseEntity<List<Transaction>> getAllTransactions() {
+    // // Giả định bạn đã viết hàm getAllTransactions trong ServiceImpl
+    // List<Transaction> transactions = transactionService.getAllTransactions();
+    // return ResponseEntity.ok(transactions);
+    // }
     @GetMapping
     public ResponseEntity<ApiResponse<PagedResponseDTO<TransactionDTO>>> getAllTransactions(
             @RequestParam(required = false) String keyword,
@@ -123,18 +131,26 @@ public class TransactionController {
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) Long partnerId,
             @RequestParam(required = false) Long userId,
-            @RequestParam(required = false)
-                @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date fromDate,
-            @RequestParam(required = false)
-                @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date toDate,
-            @RequestParam(defaultValue = "1")                int page,
-            @RequestParam(defaultValue = "10")               int size,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date fromDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date toDate,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "transaction_date") String sortBy,
-            @RequestParam(defaultValue = "desc")             String sortDir) {
+            @RequestParam(defaultValue = "desc") String sortDir) {
         return ApiResponse.ok(
-            PagedResponseDTO.from(
-                transactionService.getAllTransactions(
-                    keyword, type, status, fundId, categoryId, partnerId, userId,
-                    fromDate, toDate, page, size, sortBy, sortDir)));
+                PagedResponseDTO.from(
+                        transactionService.getAllTransactions(
+                                keyword, type, status, fundId, categoryId, partnerId, userId,
+                                fromDate, toDate, page, size, sortBy, sortDir)));
+    }
+
+    @GetMapping("/total-income")
+    public ResponseEntity<ApiResponse<Double>> getTotalIncome() {
+        return ApiResponse.ok(transactionService.getTotalIncome());
+    }
+
+    @GetMapping("/total-expense")
+    public ResponseEntity<ApiResponse<Double>> getTotalExpense() {
+        return ApiResponse.ok(transactionService.getTotalExpense());
     }
 }
