@@ -359,6 +359,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     public TransactionDTO toDTO(Transaction tx) {
         return TransactionDTO.builder()
+                .id(tx.getId())
                 .parentId(tx.getParentId() != null ? tx.getParentId() : null)
                 .fundId(tx.getFund() != null ? tx.getFund().getId() : null)
                 .categoryId(tx.getCategories() != null ? tx.getCategories().getId() : null)

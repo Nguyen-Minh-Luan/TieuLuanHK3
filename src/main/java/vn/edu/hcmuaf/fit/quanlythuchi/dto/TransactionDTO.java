@@ -10,6 +10,7 @@ import java.util.Date;
 @Setter
 @Builder
 public class TransactionDTO {
+    private Long id;
     private Long parentId;
     private Long fundId;
     private Long categoryId;
