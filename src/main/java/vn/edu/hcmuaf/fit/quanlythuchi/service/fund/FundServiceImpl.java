@@ -41,6 +41,8 @@ public class FundServiceImpl implements FundService {
         fund.setInitialBalance(request.getInitialBalance());
         fund.setCurrentBalance(request.getInitialBalance()); // currentBalance = initialBalance lúc tạo
         fund.setStatus(request.getStatus());
+        fund.setCode(request.getCode());
+        fund.setNote(request.getNote());
         fund.setIsDeleted(false);
         fund.setCreated_at(new Date());
         return toDTO(fundRepository.save(fund));
@@ -69,6 +71,12 @@ public class FundServiceImpl implements FundService {
                     Double current = existingFund.getCurrentBalance() != null ? existingFund.getCurrentBalance() : 0.0;
                     existingFund.setCurrentBalance(current + delta);
                     existingFund.setInitialBalance(request.getInitialBalance());
+                }
+                if (request.getCode() != null) {
+                    existingFund.setCode(request.getCode());
+                }
+                if (request.getNote() != null) {
+                    existingFund.setNote(request.getNote());
                 }
                 return toDTO(fundRepository.save(existingFund));
             }).orElseThrow(() -> new RuntimeException("Không tìm thấy nguồn tiền với ID: " + id));
@@ -149,6 +157,9 @@ public class FundServiceImpl implements FundService {
                 .status(fund.getStatus())
                 .initialBalance(fund.getInitialBalance())
                 .currentBalance(fund.getCurrentBalance())
+                .code(fund.getCode())
+                .note(fund.getNote())
+                .updatedAt(fund.getUpdatedAt())
                 .build();
     }
 }
