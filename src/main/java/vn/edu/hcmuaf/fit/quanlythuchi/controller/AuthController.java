@@ -19,7 +19,7 @@ public class AuthController {
     @PostMapping("/user")
     public ResponseEntity<ApiResponse<Long>> register(@RequestBody User user) {
         Long id = authService.createUser(
-                user.getUsername(), user.getPassword(), user.getFullName(), user.getEmail());
+                user.getUsername(), user.getPassword(), user.getFullName(), user.getEmail(), user.getRole(), user.getStatus());
         return ApiResponse.created(id, "Tạo tài khoản thành công");
     }
 
@@ -61,13 +61,14 @@ public class AuthController {
     public ResponseEntity<ApiResponse<PagedResponseDTO<UserResponseDTO>>> getAllUsers(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Integer role,
+            @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "1")        int page,
             @RequestParam(defaultValue = "10")       int size,
             @RequestParam(defaultValue = "username") String sortBy,
             @RequestParam(defaultValue = "asc")      String sortDir) {
         return ApiResponse.ok(
                 PagedResponseDTO.from(
-                        authService.getAllUsers(keyword, role, page, size, sortBy, sortDir)));
+                        authService.getAllUsers(keyword, role, status, page, size, sortBy, sortDir)));
     }
 }
 

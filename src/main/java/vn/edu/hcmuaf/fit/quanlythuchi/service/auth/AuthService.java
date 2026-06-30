@@ -7,7 +7,7 @@ import vn.edu.hcmuaf.fit.quanlythuchi.entity.User;
 
 @Service
 public interface AuthService {
-     Long createUser(String username, String password, String fullName, String email);
+     Long createUser(String username, String password, String fullName, String email, Integer role, String status);
      User createAmin(String username, String password, String fullName, String email);
      UserResponseDTO checkLogin(String username, String password);
      boolean deleteUser(Long id);
@@ -22,6 +22,6 @@ public interface AuthService {
       * @param sortBy   Field sắp xếp (mặc định "username")
       * @param sortDir  Chiều sắp xếp: "asc" hoặc "desc"
       */
-     Page<UserResponseDTO> getAllUsers(String keyword, Integer role,
+     Page<UserResponseDTO> getAllUsers(String keyword, Integer role, String status,
                                       int page, int size, String sortBy, String sortDir);
 }

@@ -24,7 +24,7 @@ public class AuthServiceImpl implements AuthService{
     private BCryptPasswordEncoder hashMachine = new BCryptPasswordEncoder();
 
     @Override
-    public Long createUser(String username, String password, String fullName, String email) {
+    public Long createUser(String username, String password, String fullName, String email, Integer role, String status) {
         System.out.println("--- Đã vào createUser serviceImpl ---");
         User u = new User();
         String hashedPassword = hashMachine.encode(password);
@@ -33,7 +33,8 @@ public class AuthServiceImpl implements AuthService{
         u.setFullName(fullName);
         u.setEmail(email);
         u.setIsDeleted(false);
-        u.setRole(0);
+        u.setRole(role != null ? role : 0);
+        u.setStatus(status != null ? status : "ACTIVE");
         authRepo.save(u);
         return u.getId();
     }
@@ -65,6 +66,7 @@ public class AuthServiceImpl implements AuthService{
                         .fullName(u.getFullName())
                         .email(u.getEmail())
                         .role(u.getRole())
+                        .status(u.getStatus())
                         .token(jwt.generateToken(u))
                         .build();
             }
@@ -104,6 +106,12 @@ public class AuthServiceImpl implements AuthService{
                 if (user.getPassword() != null && !user.getPassword().trim().isEmpty()) {
                     u.setPassword(hashMachine.encode(user.getPassword()));
                 }
+                if (user.getRole() != null) {
+                    u.setRole(user.getRole());
+                }
+                if (user.getStatus() != null && !user.getStatus().trim().isEmpty()) {
+                    u.setStatus(user.getStatus());
+                }
                 authRepo.save(u);
             }
         } catch (Exception e) {
@@ -113,13 +121,13 @@ public class AuthServiceImpl implements AuthService{
 
     @Override
     @Transactional
-    public Page<UserResponseDTO> getAllUsers(String keyword, Integer role,
+    public Page<UserResponseDTO> getAllUsers(String keyword, Integer role, String status,
                                             int page, int size, String sortBy, String sortDir) {
         Sort sort = sortDir.equalsIgnoreCase("ASC")
                 ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(Math.max(0, page - 1), size, sort);
-        return authRepo.searchUsers(keyword, role, pageable)
+        return authRepo.searchUsers(keyword, role, status, pageable)
                        .map(this::toUserResponseDTO);
     }
 
@@ -131,6 +139,7 @@ public class AuthServiceImpl implements AuthService{
                 .fullName(u.getFullName())
                 .email(u.getEmail())
                 .role(u.getRole())
+                .status(u.getStatus())
                 .build();
     }
 }

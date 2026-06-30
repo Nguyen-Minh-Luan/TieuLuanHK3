@@ -24,6 +24,7 @@ public class User {
     @Column(unique = true)
     private String email;
     private Boolean isDeleted;
+    private String status;
     private Date created_at;
     private Date update_at;
     private String token;
