@@ -30,7 +30,14 @@ public class CategoryServiceImpl implements CategoryService{
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
-
+    @Override
+    @Transactional(readOnly = true)
+    public CategoryDTO getCategoryById(Long id) {
+        Category category = categoryRepository.findById(id)
+                .filter(c -> !c.getIsDeleted()) // Chỉ lấy những hạng mục chưa bị xóa mềm
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy hạng mục với ID: " + id));
+        return mapToDTO(category);
+    }
     @Override
     @Transactional(readOnly = true)
     public Page<CategoryDTO> getAllCategories(String keyword, CategoryType type, Long parentId,

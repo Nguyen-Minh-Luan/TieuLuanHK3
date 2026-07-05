@@ -7,7 +7,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import vn.edu.hcmuaf.fit.quanlythuchi.dto.DebtDTO;
+import vn.edu.hcmuaf.fit.quanlythuchi.dto.DebtRequest;
+import vn.edu.hcmuaf.fit.quanlythuchi.dto.DebtResponse;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.TransactionDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.*;
 import vn.edu.hcmuaf.fit.quanlythuchi.repository.*;
@@ -32,7 +33,7 @@ public class DebtServiceImpl implements DebtService {
     // ──────────────────────────────────────────────────────────────
     @Override
     @Transactional
-    public DebtDTO createDebt(DebtDTO request) {
+    public DebtResponse createDebt(DebtRequest request) {
         validateRequest(request);
 
         Debt debt = new Debt();
@@ -54,11 +55,13 @@ public class DebtServiceImpl implements DebtService {
                         "Không tìm thấy đối tác với ID: " + request.getPartnerId()));
         debt.setPartner(partner);
 
-        // Gắn Category (bắt buộc)
-        Category category = categoryRepository.findByIdAndIsDeletedFalse(request.getCategoryId())
-                .orElseThrow(() -> new RuntimeException(
-                        "Không tìm thấy hạng mục với ID: " + request.getCategoryId()));
-        debt.setCategory(category);
+        // Gắn Category (tùy chọn — chỉ gắn nếu client cung cấp)
+        if (request.getCategoryId() != null) {
+            Category category = categoryRepository.findByIdAndIsDeletedFalse(request.getCategoryId())
+                    .orElseThrow(() -> new RuntimeException(
+                            "Không tìm thấy hạng mục với ID: " + request.getCategoryId()));
+            debt.setCategory(category);
+        }
 
         // Gắn User (bắt buộc)
         User user = userRepository.findById(request.getUserId())
@@ -66,7 +69,7 @@ public class DebtServiceImpl implements DebtService {
                         "Không tìm thấy người dùng với ID: " + request.getUserId()));
         debt.setUser(user);
 
-        return toDTO(debtRepository.save(debt));
+        return toResponse(debtRepository.save(debt));
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -74,7 +77,7 @@ public class DebtServiceImpl implements DebtService {
     // ──────────────────────────────────────────────────────────────
     @Override
     @Transactional
-    public DebtDTO updateDebt(Long id, DebtDTO request) {
+    public DebtResponse updateDebt(Long id, DebtRequest request) {
         Debt debt = findActiveDebt(id);
 
         // Không cho phép sửa khoản nợ đã thanh toán xong
@@ -123,7 +126,7 @@ public class DebtServiceImpl implements DebtService {
         }
 
         debt.setUpdatedAt(new Date());
-        return toDTO(debtRepository.save(debt));
+        return toResponse(debtRepository.save(debt));
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -146,9 +149,9 @@ public class DebtServiceImpl implements DebtService {
     //  LẤY DỮ LIỆU
     // ──────────────────────────────────────────────────────────────
     @Override
-    public DebtDTO getDebtById(Long id) {
+    public DebtResponse getDebtById(Long id) {
         Debt debt = findActiveDebt(id);
-        DebtDTO dto = toDTO(debt);
+        DebtResponse response = toResponse(debt);
 
         // Populate lịch sử thanh toán — chỉ cho GET /debts/{id}
         List<TransactionDTO> payments = transactionRepository
@@ -156,53 +159,53 @@ public class DebtServiceImpl implements DebtService {
                 .stream()
                 .map(this::toTransactionDTO)
                 .collect(Collectors.toList());
-        dto.setPayments(payments);
+        response.setPayments(payments);
 
-        return dto;
+        return response;
     }
 
     @Override
-    public List<DebtDTO> getAllDebts() {
+    public List<DebtResponse> getAllDebts() {
         return debtRepository.findByIsDeletedFalse()
-                .stream().map(this::toDTO).collect(Collectors.toList());
+                .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<DebtDTO> getAllDebts(String keyword, String debtType, Boolean isPaid,
-                                      int page, int size, String sortBy, String sortDir) {
+    public Page<DebtResponse> getAllDebts(String keyword, String debtType, Boolean isPaid,
+                                          int page, int size, String sortBy, String sortDir) {
         Sort sort = sortDir.equalsIgnoreCase("ASC")
                 ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(Math.max(0, page - 1), size, sort);
         return debtRepository.searchDebts(keyword, debtType, isPaid, pageable)
-                             .map(this::toDTO);
+                             .map(this::toResponse);
     }
 
     @Override
-    public List<DebtDTO> getDebtsByType(String debtType) {
+    public List<DebtResponse> getDebtsByType(String debtType) {
         validateDebtType(debtType);
         return debtRepository.findByDebtTypeAndIsDeletedFalse(debtType.toUpperCase())
-                .stream().map(this::toDTO).collect(Collectors.toList());
+                .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
     @Override
-    public List<DebtDTO> getDebtsByPartner(Long partnerId) {
+    public List<DebtResponse> getDebtsByPartner(Long partnerId) {
         return debtRepository.findByPartner_IdAndIsDeletedFalse(partnerId)
-                .stream().map(this::toDTO).collect(Collectors.toList());
+                .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
     @Override
-    public List<DebtDTO> getUnpaidDebts() {
+    public List<DebtResponse> getUnpaidDebts() {
         return debtRepository.findByIsPaidFalseAndIsDeletedFalse()
-                .stream().map(this::toDTO).collect(Collectors.toList());
+                .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
     @Override
-    public List<DebtDTO> getUnpaidDebtsByType(String debtType) {
+    public List<DebtResponse> getUnpaidDebtsByType(String debtType) {
         validateDebtType(debtType);
         return debtRepository.findByDebtTypeAndIsPaidFalseAndIsDeletedFalse(debtType.toUpperCase())
-                .stream().map(this::toDTO).collect(Collectors.toList());
+                .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
     @Override
@@ -256,7 +259,7 @@ public class DebtServiceImpl implements DebtService {
                         "Không tìm thấy khoản nợ với ID: " + id + " hoặc khoản nợ đã bị xóa."));
     }
 
-    private void validateRequest(DebtDTO request) {
+    private void validateRequest(DebtRequest request) {
         if (request.getDebtType() == null || request.getDebtType().trim().isEmpty()) {
             throw new IllegalArgumentException(
                     "Loại nợ không được để trống! (RECEIVABLE = khách nợ mình | PAYABLE = mình nợ)");
@@ -267,9 +270,6 @@ public class DebtServiceImpl implements DebtService {
         }
         if (request.getPartnerId() == null) {
             throw new IllegalArgumentException("Cần cung cấp ID đối tác liên quan đến khoản nợ");
-        }
-        if (request.getCategoryId() == null) {
-            throw new IllegalArgumentException("Cần cung cấp ID hạng mục cho khoản nợ");
         }
         if (request.getUserId() == null) {
             throw new IllegalArgumentException("Cần cung cấp ID người lập khoản nợ");
@@ -286,7 +286,7 @@ public class DebtServiceImpl implements DebtService {
         }
     }
 
-    /** Map Transaction entity → TransactionDTO (dùng để populate payments trong DebtDTO) */
+    /** Map Transaction entity → TransactionDTO (dùng để populate payments trong DebtResponse) */
     private TransactionDTO toTransactionDTO(Transaction tx) {
         return TransactionDTO.builder()
                 .parentId(tx.getParentId())
@@ -306,10 +306,11 @@ public class DebtServiceImpl implements DebtService {
                 .build();
     }
 
-    private DebtDTO toDTO(Debt debt) {
+    /** Map Debt entity → DebtResponse (nguồn sự thật duy nhất cho output) */
+    private DebtResponse toResponse(Debt debt) {
         double remaining = (debt.getTotalAmount() != null ? debt.getTotalAmount() : 0.0)
                          - (debt.getPaidAmount()   != null ? debt.getPaidAmount()   : 0.0);
-        return DebtDTO.builder()
+        return DebtResponse.builder()
                 .id(debt.getId())
                 .debtDate(debt.getDebtDate())
                 .debtType(debt.getDebtType())

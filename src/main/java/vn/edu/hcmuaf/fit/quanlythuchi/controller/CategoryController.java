@@ -17,7 +17,15 @@ import java.util.List;
 public class CategoryController {
 
     private final CategoryService categoryService;
-
+    /**
+     * API: Lấy chi tiết một hạng mục theo ID
+     * Method: GET
+     * URL: http://localhost:8080/categories/{id}
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<CategoryDTO>> getCategoryById(@PathVariable Long id) {
+        return ApiResponse.ok(categoryService.getCategoryById(id), "Lấy thông tin hạng mục thành công");
+    }
     /**
      * API: Lấy danh sách toàn bộ hạng mục theo dạng cây (Cha - Con)
      * Dùng cho dropdown/tree renderer — KHÔNG phân trang.
@@ -82,4 +90,4 @@ public class CategoryController {
         categoryService.deleteCategory(id);
         return ApiResponse.ok(null, "Xóa hạng mục thành công");
     }
-}
+}

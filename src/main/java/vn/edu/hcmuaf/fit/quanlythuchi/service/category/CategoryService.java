@@ -28,4 +28,6 @@ public interface CategoryService {
     CategoryDTO createCategory(CategoryDTO dto);
     CategoryDTO updateCategory(Long id, CategoryDTO dto);
     void deleteCategory(Long id);
+    // Thêm hàm lấy chi tiết một hạng mục theo ID
+    CategoryDTO getCategoryById(Long id);
 }

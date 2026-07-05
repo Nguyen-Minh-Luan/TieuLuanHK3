@@ -4,7 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import vn.edu.hcmuaf.fit.quanlythuchi.config.ApiResponse;
-import vn.edu.hcmuaf.fit.quanlythuchi.dto.DebtDTO;
+import vn.edu.hcmuaf.fit.quanlythuchi.dto.DebtRequest;
+import vn.edu.hcmuaf.fit.quanlythuchi.dto.DebtResponse;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.PagedResponseDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.service.debt.DebtService;
 
@@ -20,14 +21,14 @@ public class DebtController {
 
     /** POST /debts — Tạo khoản nợ mới */
     @PostMapping
-    public ResponseEntity<ApiResponse<DebtDTO>> createDebt(@RequestBody DebtDTO request) {
+    public ResponseEntity<ApiResponse<DebtResponse>> createDebt(@RequestBody DebtRequest request) {
         return ApiResponse.created(debtService.createDebt(request), "Tạo khoản nợ thành công");
     }
 
     /** PATCH /debts/{id} — Cập nhật khoản nợ */
     @PatchMapping("/{id}")
-    public ResponseEntity<ApiResponse<DebtDTO>> updateDebt(
-            @PathVariable Long id, @RequestBody DebtDTO request) {
+    public ResponseEntity<ApiResponse<DebtResponse>> updateDebt(
+            @PathVariable Long id, @RequestBody DebtRequest request) {
         return ApiResponse.ok(debtService.updateDebt(id, request), "Cập nhật khoản nợ thành công");
     }
 
@@ -38,15 +39,15 @@ public class DebtController {
         return ApiResponse.ok(null, "Xóa khoản nợ thành công");
     }
 
-    /** GET /debts/{id} — Lấy chi tiết một khoản nợ */
+    /** GET /debts/{id} — Lấy chi tiết một khoản nợ (kèm payments) */
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<DebtDTO>> getDebtById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<DebtResponse>> getDebtById(@PathVariable Long id) {
         return ApiResponse.ok(debtService.getDebtById(id));
     }
 
-    /** GET /debts — Lấy danh sách đối tác có phân trang và tìm kiếm */
+    /** GET /debts — Lấy danh sách có phân trang và tìm kiếm */
     @GetMapping
-    public ResponseEntity<ApiResponse<PagedResponseDTO<DebtDTO>>> getAllDebts(
+    public ResponseEntity<ApiResponse<PagedResponseDTO<DebtResponse>>> getAllDebts(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String debtType,
             @RequestParam(required = false) Boolean isPaid,
@@ -61,27 +62,27 @@ public class DebtController {
 
     /** GET /debts/type/{debtType} — Lấy theo loại (RECEIVABLE | PAYABLE) */
     @GetMapping("/type/{debtType}")
-    public ResponseEntity<ApiResponse<List<DebtDTO>>> getDebtsByType(
+    public ResponseEntity<ApiResponse<List<DebtResponse>>> getDebtsByType(
             @PathVariable String debtType) {
         return ApiResponse.ok(debtService.getDebtsByType(debtType));
     }
 
     /** GET /debts/partner/{partnerId} — Lấy theo đối tác */
     @GetMapping("/partner/{partnerId}")
-    public ResponseEntity<ApiResponse<List<DebtDTO>>> getDebtsByPartner(
+    public ResponseEntity<ApiResponse<List<DebtResponse>>> getDebtsByPartner(
             @PathVariable Long partnerId) {
         return ApiResponse.ok(debtService.getDebtsByPartner(partnerId));
     }
 
     /** GET /debts/unpaid — Lấy tất cả khoản nợ chưa thanh toán xong */
     @GetMapping("/unpaid")
-    public ResponseEntity<ApiResponse<List<DebtDTO>>> getUnpaidDebts() {
+    public ResponseEntity<ApiResponse<List<DebtResponse>>> getUnpaidDebts() {
         return ApiResponse.ok(debtService.getUnpaidDebts());
     }
 
     /** GET /debts/unpaid/{debtType} — Lấy nợ chưa trả theo loại */
     @GetMapping("/unpaid/{debtType}")
-    public ResponseEntity<ApiResponse<List<DebtDTO>>> getUnpaidDebtsByType(
+    public ResponseEntity<ApiResponse<List<DebtResponse>>> getUnpaidDebtsByType(
             @PathVariable String debtType) {
         return ApiResponse.ok(debtService.getUnpaidDebtsByType(debtType));
     }

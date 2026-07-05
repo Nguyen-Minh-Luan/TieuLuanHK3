@@ -22,7 +22,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.cors(cors -> cors.configurationSource(request -> {
             var corsConfiguration = new org.springframework.web.cors.CorsConfiguration();
-            corsConfiguration.setAllowedOrigins(java.util.List.of("http://localhost:5173", "http://localhost:3000"));
+            corsConfiguration.setAllowedOrigins(java.util.List.of("http://localhost:5173","http://127.0.0.1:5173", "http://localhost:3000"));
             corsConfiguration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
             corsConfiguration.setAllowedHeaders(java.util.List.of("*"));
             corsConfiguration.setAllowCredentials(true);
@@ -37,11 +37,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/pdf/transactions/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/pdf/reports/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/auth/user").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/debts").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/debts").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/debts").permitAll()
-                        .requestMatchers(HttpMethod.PATCH, "/debts").permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/debts").permitAll()
+                        // 1. Sửa lỗi cú pháp dòng /debts (HttpMethod cần có loại cụ thể hoặc bỏ trống nếu permitAll hết)
+                        .requestMatchers("/debts","/debts/**").permitAll()
+
+                        // 2. Thêm dòng này để cho phép gọi API categories công khai
+                        .requestMatchers("/categories","/categories/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
