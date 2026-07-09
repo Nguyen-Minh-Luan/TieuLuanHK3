@@ -101,6 +101,7 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setDatetime(new Date());
         transaction.setStatus("ACTIVE");
         transaction.setHasWarning(request.getHasWarning());
+        transaction.setWarningLevel(request.getWarningLevel() != null ? request.getWarningLevel() : "NORMAL");
 
         // ── TÍCH HỢP NỢ: Kiểm tra và cập nhật khoản nợ (nếu phiếu này đang thanh toán
         // cho một khoản nợ) ──
@@ -228,6 +229,8 @@ public class TransactionServiceImpl implements TransactionService {
         newTx.setTransaction_date(oldTx.getTransaction_date()); // Giữ ngày giao dịch gốc
         newTx.setCreated_at(new Date());
         newTx.setDatetime(new Date());
+        newTx.setHasWarning(newRequest.getHasWarning() != null ? newRequest.getHasWarning() : oldTx.getHasWarning());
+        newTx.setWarningLevel(newRequest.getWarningLevel() != null ? newRequest.getWarningLevel() : oldTx.getWarningLevel());
 
         // --- Kết thúc set các trường ---
 
@@ -373,6 +376,7 @@ public class TransactionServiceImpl implements TransactionService {
                 .transactionDate(tx.getTransaction_date())
                 .createdAt(tx.getCreated_at())
                 .hasWarning(tx.getHasWarning())
+                .warningLevel(tx.getWarningLevel() != null ? tx.getWarningLevel() : "NORMAL")
                 .reason(tx.getReason())
                 .accompaniedBy(tx.getAccompaniedBy())
                 .originalDocuments(tx.getOriginalDocuments())

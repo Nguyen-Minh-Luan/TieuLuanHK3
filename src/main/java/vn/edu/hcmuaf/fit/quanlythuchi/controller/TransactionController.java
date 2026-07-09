@@ -47,9 +47,14 @@ public class TransactionController {
             // Bước 2: Nếu có cảnh báo → đánh dấu isOverBudget trước khi lưu
             if (warning != null && warning.isHasWarning()) {
                 requestDTO.setHasWarning(true);
+                requestDTO.setWarningLevel(warning.getLevel());
             } else {
                 requestDTO.setHasWarning(false);
+                requestDTO.setWarningLevel(warning != null ? warning.getLevel() : "NORMAL");
             }
+        } else {
+            requestDTO.setHasWarning(false);
+            requestDTO.setWarningLevel("NORMAL");
         }
 
         // Bước 1: Lưu giao dịch vào DB (logic cũ giữ nguyên)
@@ -73,8 +78,16 @@ public class TransactionController {
 
     @GetMapping("/categories/{categoryId}")
     public ResponseEntity<ApiResponse<SpendingWarningDTO>> checkWarningByCategory(
-            @PathVariable Long categoryId) {
-        SpendingWarningDTO warning = spendingWarningService.analyze(categoryId);
+            @PathVariable Long categoryId,
+            @RequestParam(required = false) Double amount) {
+        SpendingWarningDTO warning;
+        if (amount != null && amount > 0) {
+            TransactionDTO requestDTO = new TransactionDTO();
+            requestDTO.setAmount(amount);
+            warning = spendingWarningService.analyze(categoryId, requestDTO);
+        } else {
+            warning = spendingWarningService.analyze(categoryId);
+        }
         return ApiResponse.ok(warning, "Phân tích chi tiêu hạng mục thành công");
     }
 
