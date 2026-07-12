@@ -18,6 +18,7 @@ public class User {
     @Column(unique = true,nullable = false)
     private String username;
     private String password;
+    // 0 = Người xem, 1 = Quản trị viên (ROLE_ADMIN), 2 = Kế toán viên (ROLE_KETOAN), 3 = Thủ quỹ (ROLE_THUQUY)
     private Integer role;
     @Column(name = "full_name")
     private String fullName;

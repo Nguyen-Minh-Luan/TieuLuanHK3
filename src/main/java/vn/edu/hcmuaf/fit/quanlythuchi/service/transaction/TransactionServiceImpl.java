@@ -12,6 +12,7 @@ import vn.edu.hcmuaf.fit.quanlythuchi.entity.*;
 import vn.edu.hcmuaf.fit.quanlythuchi.repository.*;
 import vn.edu.hcmuaf.fit.quanlythuchi.service.debt.DebtService;
 import vn.edu.hcmuaf.fit.quanlythuchi.service.transaction.TransactionService;
+import vn.edu.hcmuaf.fit.quanlythuchi.service.reconciliation.FundReconciliationService;
 
 import java.util.Date;
 import java.util.List;
@@ -29,6 +30,7 @@ public class TransactionServiceImpl implements TransactionService {
     private final PartnerRepository partnerRepository;
     private final DebtRepository debtRepository;
     private final DebtService debtService;
+    private final FundReconciliationService reconciliationService;
 
     @Override
     @Transactional
@@ -45,6 +47,9 @@ public class TransactionServiceImpl implements TransactionService {
         Fund fund = fundRepository.findById(request.getFundId())
                 .orElseThrow(
                         () -> new RuntimeException("Không tìm thấy Nguồn tiền (Fund) với ID: " + request.getFundId()));
+        
+        Date txDate = request.getTransactionDate() != null ? request.getTransactionDate() : new Date();
+        reconciliationService.assertNotLocked(request.getFundId(), txDate);
 
         // 3. Xử lý logic cộng trừ số dư (Tuần tự, không đệ quy)
         Double currentBalance = fund.getCurrentBalance() != null ? fund.getCurrentBalance() : 0.0;
@@ -96,7 +101,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         // Tạo mã giao dịch ngẫu nhiên
         transaction.setTransaction_code("TXN-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
-        transaction.setTransaction_date(new Date());
+        transaction.setTransaction_date(txDate);
         transaction.setCreated_at(new Date());
         transaction.setDatetime(new Date());
         transaction.setStatus("ACTIVE");
@@ -146,6 +151,13 @@ public class TransactionServiceImpl implements TransactionService {
         // Lấy giao dịch cũ lên
         Transaction oldTx = transactionRepository.findById(oldId)
                 .orElseThrow(() -> new RuntimeException("Giao dịch không tồn tại"));
+
+        // Kiểm tra khóa sổ với giao dịch cũ
+        reconciliationService.assertNotLocked(oldTx.getFund().getId(), oldTx.getTransaction_date());
+        // Kiểm tra khóa sổ với dữ liệu mới (nếu có đổi ngày hoặc đổi quỹ)
+        Long targetFundId = newRequest.getFundId() != null ? newRequest.getFundId() : oldTx.getFund().getId();
+        Date targetTxDate = newRequest.getTransactionDate() != null ? newRequest.getTransactionDate() : oldTx.getTransaction_date();
+        reconciliationService.assertNotLocked(targetFundId, targetTxDate);
 
         // Không cho phép cập nhật phiếu đã liên kết với khoản nợ
         if (oldTx.getDebt() != null) {
@@ -226,7 +238,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         // Xử lý các trường thời gian và mã giao dịch
         newTx.setTransaction_code("TXN-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
-        newTx.setTransaction_date(oldTx.getTransaction_date()); // Giữ ngày giao dịch gốc
+        newTx.setTransaction_date(targetTxDate); // Cho phép cập nhật ngày giao dịch nếu client gửi
         newTx.setCreated_at(new Date());
         newTx.setDatetime(new Date());
         newTx.setHasWarning(newRequest.getHasWarning() != null ? newRequest.getHasWarning() : oldTx.getHasWarning());
@@ -260,6 +272,9 @@ public class TransactionServiceImpl implements TransactionService {
         // 1. Lấy giao dịch an toàn
         Transaction tx = transactionRepository.findById(txId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy giao dịch với ID: " + txId));
+                
+        // Kiểm tra khóa sổ
+        reconciliationService.assertNotLocked(tx.getFund().getId(), tx.getTransaction_date());
 
         // 2. CHECK LOGIC: Chỉ cho phép hủy nếu giao dịch đang ở trạng thái ACTIVE
         if (!"ACTIVE".equalsIgnoreCase(tx.getStatus())) {

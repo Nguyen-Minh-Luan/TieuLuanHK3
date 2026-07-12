@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.Transaction;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -60,6 +61,16 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     /** Lấy tất cả phiếu thu/chi đã thanh toán cho một khoản nợ theo trạng thái */
     List<Transaction> findByDebt_IdAndStatus(Long debtId, String status);
+
+    @Query("SELECT t FROM Transaction t WHERE t.status != 'CANCELLED'")
+    Page<Transaction> findAllActive(Pageable pageable);
+
+    @Query("SELECT COALESCE(SUM(CASE WHEN t.type IN ('INCOME','INCOME_DEBT') THEN t.amount " +
+            "WHEN t.type IN ('EXPENSE','EXPENSE_DEBT') THEN -t.amount ELSE 0 END), 0) " +
+            "FROM Transaction t WHERE t.fund.id = :fundId " +
+            "AND t.status = 'ACTIVE' " +
+            "AND t.transaction_date BETWEEN :from AND :to")
+    Double sumNetAmountByFundAndPeriod(@Param("fundId") Long fundId, @Param("from") Date from, @Param("to") Date to);
 
     @Query("SELECT t FROM Transaction t " +
            "WHERE " +

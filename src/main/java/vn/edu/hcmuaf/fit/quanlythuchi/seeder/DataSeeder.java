@@ -72,9 +72,9 @@ public class DataSeeder implements CommandLineRunner {
         list.add(buildUser("admin", "Admin@123", "Nguyễn Văn Quản Trị",
                 "admin@quanlythuchi.vn", 1, "ACTIVE", date(2025, 1, 1)));
         list.add(buildUser("ketoan01", "KeToan@123", "Trần Thị Kế Toán",
-                "ketoan01@quanlythuchi.vn", 0, "ACTIVE", date(2025, 2, 15)));
+                "ketoan01@quanlythuchi.vn", 2, "ACTIVE", date(2025, 2, 15)));
         list.add(buildUser("thuchi01", "ThuChi@123", "Lê Văn Thu Chi",
-                "thuchi01@quanlythuchi.vn", 0, "ACTIVE", date(2025, 3, 10)));
+                "thuchi01@quanlythuchi.vn", 3, "ACTIVE", date(2025, 3, 10)));
         list.add(buildUser("22130154", "123", "Nguyen Minh Luan",
                 "22130154@quanlythuchi.vn", 0, "ACTIVE", date(2025, 3, 10)));
 

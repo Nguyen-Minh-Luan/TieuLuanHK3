@@ -20,16 +20,19 @@ public class JwtUtil {
     public Key getSigningKey() {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }
-    //tạo JWT từ username
+
+    // tạo JWT từ username
     public String generateToken(User u) {
         return Jwts.builder().setSubject(u.getUsername())
+                .claim("id", u.getId())
                 .claim("role", u.getRole())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date((new Date()).getTime() + jwtExpiration))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
-    public String getUsernameFromJWT(String token){
+
+    public String getUsernameFromJWT(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
                 .build()
@@ -37,6 +40,7 @@ public class JwtUtil {
                 .getBody()
                 .getSubject();
     }
+
     public User getUserFromJwtToken(String token) {
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
@@ -44,12 +48,15 @@ public class JwtUtil {
                 .parseClaimsJws(token)
                 .getBody();
         String username = claims.getSubject();
-        Integer role = (Integer) claims.get("role");
+        Integer role = claims.get("role", Integer.class);
+        Long id = claims.get("id", Long.class);
         User user = new User();
+        user.setId(id);
         user.setUsername(username);
         user.setRole(role);
         return user;
     }
+
     public boolean validateJwtToken(String authToken) {
         try {
             Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(authToken);
