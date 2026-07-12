@@ -43,6 +43,10 @@ public class SecurityConfig {
                         // 2. Thêm dòng này để cho phép gọi API categories công khai
                         .requestMatchers("/categories","/categories/**").permitAll()
                         
+                        // Cấu hình phân quyền cho chuyển quỹ
+                        .requestMatchers(HttpMethod.POST, "/fund-transfers").hasAnyAuthority("ROLE_ADMIN", "ROLE_THUQUY")
+                        .requestMatchers(HttpMethod.GET, "/fund-transfers/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_THUQUY", "ROLE_KETOAN")
+
                         // Cấu hình phân quyền cho kiểm kê quỹ
                         .requestMatchers(HttpMethod.POST, "/reconciliations", "/reconciliations/*/close", "/reconciliations/*/reopen").hasAnyAuthority("ROLE_ADMIN", "ROLE_THUQUY")
                         .requestMatchers(HttpMethod.PATCH, "/reconciliations/*").hasAnyAuthority("ROLE_ADMIN", "ROLE_THUQUY")

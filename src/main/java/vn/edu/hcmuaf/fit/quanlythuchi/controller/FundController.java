@@ -23,10 +23,10 @@ public class FundController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String status,
-            @RequestParam(defaultValue = "1")    int page,
-            @RequestParam(defaultValue = "10")   int size,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "100") int size,
             @RequestParam(defaultValue = "name") String sortBy,
-            @RequestParam(defaultValue = "asc")  String sortDir) {
+            @RequestParam(defaultValue = "asc") String sortDir) {
         return ApiResponse.ok(
                 PagedResponseDTO.from(
                         fundService.getAllFunds(keyword, type, status, page, size, sortBy, sortDir)));
@@ -55,4 +55,4 @@ public class FundController {
         Double totalBalance = fundService.getTotalFund();
         return ApiResponse.ok(Map.of("totalBalance", totalBalance));
     }
-}
+}

@@ -43,7 +43,13 @@ public class MoneyToWordsConverter {
         }
         return res;
     }
+    public static String convert(double amount) {
+        // Làm tròn số double về long gần nhất (ví dụ: 100000.5 -> 100001)
+        long roundedAmount = Math.round(amount);
 
+        // Gọi lại hàm convert(long) có sẵn của bạn để xử lý đọc chữ
+        return convert(roundedAmount);
+    }
     private static String readGroup3(long n, boolean showZeroHundreds) {
         long hundred = n / 100;
         long ten = (n % 100) / 10;
