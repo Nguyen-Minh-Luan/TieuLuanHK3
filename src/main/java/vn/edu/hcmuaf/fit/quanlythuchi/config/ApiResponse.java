@@ -73,4 +73,10 @@ public class ApiResponse<T> {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR, message, null, "SERVER_ERROR"));
     }
+
+    // 7. Lỗi phân quyền 403 Forbidden
+    public static <T> ResponseEntity<ApiResponse<T>> forbidden(String message, String errorCode) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ApiResponse<>(HttpStatus.FORBIDDEN, message, null, errorCode));
+    }
 }

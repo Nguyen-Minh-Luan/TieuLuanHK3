@@ -40,6 +40,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         case 1: roleName = "ROLE_ADMIN"; break;
                         case 2: roleName = "ROLE_KETOAN"; break;
                         case 3: roleName = "ROLE_THUQUY"; break;
+                        case 4: roleName = "ROLE_TONGHOP"; break;
                     }
                 }
                 List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(roleName));

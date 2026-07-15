@@ -40,6 +40,7 @@ public class FundReconciliationController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_THUQUY', 'ROLE_TONGHOP')")
     public ResponseEntity<ApiResponse<Page<FundReconciliationDTO>>> getAll(
             @RequestParam(required = false) Long fundId,
             @RequestParam(required = false) String status,
@@ -60,6 +61,7 @@ public class FundReconciliationController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_THUQUY', 'ROLE_TONGHOP')")
     public ResponseEntity<ApiResponse<FundReconciliationDTO>> getById(@PathVariable Long id) {
         FundReconciliation recon = reconciliationService.getById(id);
         return ApiResponse.ok(FundReconciliationDTO.fromEntity(recon), "Thành công");
@@ -121,6 +123,7 @@ public class FundReconciliationController {
     }
 
     @GetMapping("/lock-check")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_THUQUY', 'ROLE_TONGHOP')")
     public ResponseEntity<ApiResponse<Boolean>> checkLock(
             @RequestParam Long fundId,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date date) {

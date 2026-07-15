@@ -20,7 +20,7 @@ import java.util.List;
  * Chỉ seed khi database còn trống để tránh tạo trùng lặp mỗi lần restart.
  *
  * Sinh ra:
- * - 4 User         (password được mã hoá bằng BCrypt, đúng theo AuthServiceImpl)
+ * - 5 User         (password được mã hoá bằng BCrypt, đúng theo AuthServiceImpl)
  * - 6 Category     (INCOME / EXPENSE)
  * - 3 Fund
  * - 5 Partner
@@ -77,6 +77,9 @@ public class DataSeeder implements CommandLineRunner {
                 "thuchi01@quanlythuchi.vn", 3, "ACTIVE", date(2025, 3, 10)));
         list.add(buildUser("22130154", "123", "Nguyen Minh Luan",
                 "22130154@quanlythuchi.vn", 0, "ACTIVE", date(2025, 3, 10)));
+
+        list.add(buildUser("tonghop01", "TongHop@123", "Phạm Thị Tổng Hợp",
+                "tonghop01@quanlythuchi.vn", 4, "ACTIVE", date(2025, 4, 1)));
 
         return userRepository.saveAll(list);
     }

@@ -42,7 +42,7 @@ public class FundTransferController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_THUQUY', 'ROLE_KETOAN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_THUQUY', 'ROLE_TONGHOP')")
     public ResponseEntity<ApiResponse<Page<FundTransferDTO>>> getTransferHistory(
             @RequestParam(required = false) Long fundId,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date fromDate,
@@ -61,7 +61,7 @@ public class FundTransferController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_THUQUY', 'ROLE_KETOAN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_THUQUY', 'ROLE_TONGHOP')")
     public ResponseEntity<ApiResponse<FundTransferDTO>> getTransferById(@PathVariable Long id) {
         FundTransferDTO result = fundTransferService.getTransferById(id);
         return ApiResponse.ok(result, "Thành công");

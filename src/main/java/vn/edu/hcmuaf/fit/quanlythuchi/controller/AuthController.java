@@ -33,6 +33,11 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout() {
+        return ApiResponse.ok(null, "Đăng xuất thành công");
+    }
+
     @DeleteMapping("/user/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long id) {
         boolean isDeleted = authService.deleteUser(id);

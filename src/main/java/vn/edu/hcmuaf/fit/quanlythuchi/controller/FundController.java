@@ -2,6 +2,7 @@ package vn.edu.hcmuaf.fit.quanlythuchi.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import vn.edu.hcmuaf.fit.quanlythuchi.config.ApiResponse;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.FundDTO;
@@ -33,11 +34,13 @@ public class FundController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<ApiResponse<FundDTO>> createFund(@RequestBody FundDTO request) {
         return ApiResponse.created(fundService.createFund(request), "Tạo nguồn tiền thành công");
     }
 
     @PatchMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<ApiResponse<FundDTO>> updateFund(
             @PathVariable Long id,
             @RequestBody FundDTO request) {
@@ -45,6 +48,7 @@ public class FundController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteFund(@PathVariable Long id) {
         fundService.deleteFund(id);
         return ApiResponse.ok(null, "Xóa nguồn tiền thành công");

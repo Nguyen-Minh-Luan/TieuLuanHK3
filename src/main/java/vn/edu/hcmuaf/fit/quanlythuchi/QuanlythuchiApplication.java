@@ -5,7 +5,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.security.cert.X509Certificate;
 
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
+
 @SpringBootApplication
+@EnableAsync
+@EnableScheduling
 public class QuanlythuchiApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(QuanlythuchiApplication.class, args);
