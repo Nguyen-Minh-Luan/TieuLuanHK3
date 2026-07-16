@@ -98,4 +98,37 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
         @Param("toDate")     java.util.Date toDate,
         Pageable pageable
     );
+
+    /**
+     * Lấy tổng thu/chi theo tháng trong N tháng gần nhất (bao gồm cả tháng hiện tại).
+     * Trả về danh sách [year, month, totalIncome, totalExpense]
+     */
+    @Query(value =
+            "SELECT YEAR(t.transaction_date) AS yr, MONTH(t.transaction_date) AS mo, " +
+                    "       SUM(CASE WHEN t.type IN ('INCOME','INCOME_DEBT') THEN t.amount ELSE 0 END) AS totalIncome, " +
+                    "       SUM(CASE WHEN t.type IN ('EXPENSE','EXPENSE_DEBT') THEN t.amount ELSE 0 END) AS totalExpense " +
+                    "FROM transactions t " +
+                    "WHERE t.status = 'ACTIVE' " +
+                    "  AND t.transaction_date >= DATE_FORMAT(NOW() - INTERVAL :monthsBack MONTH, '%Y-%m-01') " +
+                    "GROUP BY YEAR(t.transaction_date), MONTH(t.transaction_date) " +
+                    "ORDER BY yr ASC, mo ASC",
+            nativeQuery = true)
+    List<Object[]> getMonthlyCashFlowForLastNMonths(@Param("monthsBack") int monthsBack);
+
+    /**
+     * Lấy tổng chi tiêu của TẤT CẢ các danh mục chi phí (EXPENSE) theo tháng trong N tháng gần nhất.
+     * Trả về danh sách [categoryId, categoryName, year, month, totalAmount]
+     */
+    @Query(value =
+            "SELECT t.categories_id, c.name, YEAR(t.transaction_date) AS yr, MONTH(t.transaction_date) AS mo, " +
+                    "       COALESCE(SUM(t.amount), 0.0) AS total " +
+                    "FROM transactions t " +
+                    "JOIN categories c ON t.categories_id = c.id " +
+                    "WHERE t.status = 'ACTIVE' " +
+                    "  AND c.type = 'EXPENSE' " +
+                    "  AND t.transaction_date >= DATE_FORMAT(NOW() - INTERVAL :monthsBack MONTH, '%Y-%m-01') " +
+                    "GROUP BY t.categories_id, c.name, YEAR(t.transaction_date), MONTH(t.transaction_date) " +
+                    "ORDER BY t.categories_id ASC, yr ASC, mo ASC",
+            nativeQuery = true)
+    List<Object[]> getMonthlyTotalExpenseAllCategoriesForLastNMonths(@Param("monthsBack") int monthsBack);
 }

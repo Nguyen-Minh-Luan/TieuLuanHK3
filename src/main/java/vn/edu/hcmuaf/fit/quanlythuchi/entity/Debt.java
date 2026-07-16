@@ -19,6 +19,9 @@ public class Debt {
     @Column(name = "debt_date", nullable = false)
     private Date debtDate;
 
+    @Column(name = "due_date")
+    private Date dueDate;
+
     /**
      * "RECEIVABLE" → Đối tác đang nợ mình (mình sẽ thu về)
      * "PAYABLE"    → Mình đang nợ đối tác (mình sẽ phải chi trả)

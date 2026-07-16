@@ -20,6 +20,9 @@ public class DebtRequest {
     /** Ngày ghi sổ nợ (yyyy-MM-dd). Nếu null, server dùng ngày hiện tại. */
     private Date debtDate;
 
+    /** Ngày đến hạn thanh toán. Tùy chọn. */
+    private Date dueDate;
+
     /** Loại nợ: "RECEIVABLE" (phải thu) | "PAYABLE" (phải chi). Bắt buộc khi tạo. */
     private String debtType;
 

@@ -32,6 +32,9 @@ public interface DebtRepository extends JpaRepository<Debt, Long> {
     /** Lấy danh sách nợ chưa thanh toán xong theo loại */
     List<Debt> findByDebtTypeAndIsPaidFalseAndIsDeletedFalse(String debtType);
 
+    /** Lấy danh sách nợ chưa trả, có ngày đến hạn, sắp xếp tăng dần theo ngày đến hạn (dùng để cảnh báo) */
+    List<Debt> findTop5ByDebtTypeAndIsPaidFalseAndIsDeletedFalseAndDueDateNotNullOrderByDueDateAsc(String debtType);
+
     /**
      * Tính tổng số tiền nợ còn phải thu (RECEIVABLE, chưa trả xong).
      * Dùng cho dashboard tổng quan.

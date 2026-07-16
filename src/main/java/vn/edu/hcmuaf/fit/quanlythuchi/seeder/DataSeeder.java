@@ -201,31 +201,31 @@ public class DataSeeder implements CommandLineRunner {
         List<Debt> list = new ArrayList<>();
 
         // 1. Còn nợ - RECEIVABLE (đối tác nợ mình)
-        list.add(buildDebt(date(2026, 6, 1), "RECEIVABLE", 15_000_000.0, 5_000_000.0, false,
+        list.add(buildDebt(date(2026, 6, 1), date(2026, 7, 30), "RECEIVABLE", 15_000_000.0, 5_000_000.0, false,
                 null, partners.get(2), categories.get(1), users.get(1),
                 "Công nợ bán hàng tháng 6", "Khách hàng thanh toán trước 1/3 giá trị đơn hàng",
                 date(2026, 6, 1), date(2026, 6, 5)));
 
         // 2. Đã trả xong - PAYABLE
-        list.add(buildDebt(date(2026, 5, 10), "PAYABLE", 25_000_000.0, 25_000_000.0, true,
+        list.add(buildDebt(date(2026, 5, 10), date(2026, 6, 10), "PAYABLE", 25_000_000.0, 25_000_000.0, true,
                 date(2026, 6, 2), partners.get(1), categories.get(5), users.get(1),
                 "Thanh toán nguyên vật liệu tháng 5", "Đã thanh toán đầy đủ cho nhà cung cấp",
                 date(2026, 5, 10), date(2026, 6, 2)));
 
-        // 3. Chưa trả - RECEIVABLE
-        list.add(buildDebt(date(2026, 6, 15), "RECEIVABLE", 8_000_000.0, 0.0, false,
+        // 3. Chưa trả - RECEIVABLE (Sát hạn)
+        list.add(buildDebt(date(2026, 6, 15), date(2026, 7, 20), "RECEIVABLE", 8_000_000.0, 0.0, false,
                 null, partners.get(4), categories.get(1), users.get(2),
                 "Công nợ dịch vụ tư vấn", "Khách hàng hẹn thanh toán vào cuối tháng",
                 date(2026, 6, 15), date(2026, 6, 15)));
 
-        // 4. Còn nợ 1 phần - PAYABLE
-        list.add(buildDebt(date(2026, 6, 20), "PAYABLE", 12_500_000.0, 6_000_000.0, false,
+        // 4. Còn nợ 1 phần - PAYABLE (Gần hạn thanh toán)
+        list.add(buildDebt(date(2026, 6, 20), date(2026, 7, 18), "PAYABLE", 12_500_000.0, 6_000_000.0, false,
                 null, partners.get(3), categories.get(5), users.get(1),
                 "Nợ tiền hàng nhập kho", "Đã ứng trước 6.000.000đ, phần còn lại thanh toán sau 30 ngày",
                 date(2026, 6, 20), date(2026, 6, 25)));
 
         // 5. Đã trả xong - RECEIVABLE
-        list.add(buildDebt(date(2026, 4, 5), "RECEIVABLE", 30_000_000.0, 30_000_000.0, true,
+        list.add(buildDebt(date(2026, 4, 5), date(2026, 5, 5), "RECEIVABLE", 30_000_000.0, 30_000_000.0, true,
                 date(2026, 5, 1), partners.get(0), categories.get(1), users.get(2),
                 "Thanh lý hợp đồng dự án Q1/2026", "Khách hàng đã tất toán toàn bộ công nợ",
                 date(2026, 4, 5), date(2026, 5, 1)));
@@ -233,11 +233,12 @@ public class DataSeeder implements CommandLineRunner {
         return debtRepository.saveAll(list);
     }
 
-    private Debt buildDebt(Date debtDate, String debtType, Double totalAmount, Double paidAmount,
+    private Debt buildDebt(Date debtDate, Date dueDate, String debtType, Double totalAmount, Double paidAmount,
                            Boolean isPaid, Date paymentDate, Partner partner, Category category,
                            User user, String title, String note, Date createdAt, Date updatedAt) {
         Debt d = new Debt();
         d.setDebtDate(debtDate);
+        d.setDueDate(dueDate);
         d.setDebtType(debtType);
         d.setTotalAmount(totalAmount);
         d.setPaidAmount(paidAmount);

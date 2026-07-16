@@ -38,6 +38,7 @@ public class DebtServiceImpl implements DebtService {
 
         Debt debt = new Debt();
         debt.setDebtDate(request.getDebtDate() != null ? request.getDebtDate() : new Date());
+        debt.setDueDate(request.getDueDate());
         debt.setDebtType(request.getDebtType().toUpperCase());
         debt.setTotalAmount(request.getTotalAmount());
         debt.setPaidAmount(0.0);    // Luôn bắt đầu từ 0
@@ -93,6 +94,9 @@ public class DebtServiceImpl implements DebtService {
         }
         if (request.getDebtDate() != null) {
             debt.setDebtDate(request.getDebtDate());
+        }
+        if (request.getDueDate() != null) {
+            debt.setDueDate(request.getDueDate());
         }
         if (request.getDebtType() != null && !request.getDebtType().trim().isEmpty()) {
             validateDebtType(request.getDebtType());
@@ -313,6 +317,7 @@ public class DebtServiceImpl implements DebtService {
         return DebtResponse.builder()
                 .id(debt.getId())
                 .debtDate(debt.getDebtDate())
+                .dueDate(debt.getDueDate())
                 .debtType(debt.getDebtType())
                 .totalAmount(debt.getTotalAmount())
                 .paidAmount(debt.getPaidAmount())

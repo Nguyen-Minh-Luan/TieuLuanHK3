@@ -21,6 +21,7 @@ public class DebtResponse {
 
     // ── Thông tin cốt lõi ─────────────────────────────────────────
     private Date debtDate;
+    private Date dueDate;
     private String debtType;        // "RECEIVABLE" | "PAYABLE"
     private Double totalAmount;
 
