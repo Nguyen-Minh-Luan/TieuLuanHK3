@@ -52,6 +52,7 @@ public class GeminiClient {
         Map<String, Object> generationConfig = new HashMap<>();
         generationConfig.put("temperature", temperature);
         generationConfig.put("responseMimeType", "application/json");
+        generationConfig.put("responseSchema", buildAIInsightResponseSchema());
 
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("systemInstruction", systemInstruction);
@@ -77,5 +78,57 @@ public class GeminiClient {
             System.err.println("Error calling Gemini API: " + e.getMessage());
         }
         return null;
+    }
+
+    /**
+     * Định nghĩa tường minh JSON schema khớp 1-1 với AIInsightResponseDTO.
+     * Dùng responseSchema (structured output) thay vì chỉ dựa vào mô tả
+     * bằng lời trong system prompt, để Gemini luôn trả đúng tên field,
+     * đúng kiểu dữ liệu, tránh trường hợp field bị thiếu/null khi map
+     * sang DTO (ví dụ cashFlowNarrative, cashFlowStatus bị rớt mất).
+     */
+    private Map<String, Object> buildAIInsightResponseSchema() {
+        Map<String, Object> spendingSpikeSchema = new HashMap<>();
+        spendingSpikeSchema.put("type", "OBJECT");
+        spendingSpikeSchema.put("properties", Map.of(
+                "category", Map.of("type", "STRING"),
+                "overagePercent", Map.of("type", "NUMBER"),
+                "comment", Map.of("type", "STRING")));
+        spendingSpikeSchema.put("required", List.of("category", "overagePercent", "comment"));
+
+        Map<String, Object> liquidityRiskSchema = new HashMap<>();
+        liquidityRiskSchema.put("type", "OBJECT");
+        liquidityRiskSchema.put("properties", Map.of(
+                "hasRisk", Map.of("type", "BOOLEAN"),
+                "message", Map.of("type", "STRING")));
+        liquidityRiskSchema.put("required", List.of("hasRisk", "message"));
+
+        Map<String, Object> cashFlowStatusSchema = new HashMap<>();
+        cashFlowStatusSchema.put("type", "STRING");
+        cashFlowStatusSchema.put("enum", List.of("HEALTHY", "WARNING", "CRITICAL"));
+
+        Map<String, Object> spendingSpikesArraySchema = new HashMap<>();
+        spendingSpikesArraySchema.put("type", "ARRAY");
+        spendingSpikesArraySchema.put("items", spendingSpikeSchema);
+
+        Map<String, Object> recommendationsArraySchema = new HashMap<>();
+        recommendationsArraySchema.put("type", "ARRAY");
+        recommendationsArraySchema.put("items", Map.of("type", "STRING"));
+
+        Map<String, Object> rootProperties = new HashMap<>();
+        rootProperties.put("cashFlowNarrative", Map.of("type", "STRING"));
+        rootProperties.put("cashFlowStatus", cashFlowStatusSchema);
+        rootProperties.put("spendingSpikes", spendingSpikesArraySchema);
+        rootProperties.put("recommendations", recommendationsArraySchema);
+        rootProperties.put("liquidityRisk", liquidityRiskSchema);
+
+        Map<String, Object> rootSchema = new HashMap<>();
+        rootSchema.put("type", "OBJECT");
+        rootSchema.put("properties", rootProperties);
+        rootSchema.put("required", List.of(
+                "cashFlowNarrative", "cashFlowStatus", "spendingSpikes",
+                "recommendations", "liquidityRisk"));
+
+        return rootSchema;
     }
 }
