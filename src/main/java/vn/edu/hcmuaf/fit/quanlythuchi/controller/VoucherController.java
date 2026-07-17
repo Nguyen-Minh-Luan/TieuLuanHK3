@@ -12,6 +12,7 @@ import vn.edu.hcmuaf.fit.quanlythuchi.repository.ReportRepository;
 import vn.edu.hcmuaf.fit.quanlythuchi.repository.TransactionRepository;
 import vn.edu.hcmuaf.fit.quanlythuchi.service.pdf.PdfExportService;
 import vn.edu.hcmuaf.fit.quanlythuchi.service.pdf.PdfReportExportService;
+import vn.edu.hcmuaf.fit.quanlythuchi.exception.ResourceNotFoundException;
 
 import java.nio.charset.StandardCharsets;
 
@@ -28,16 +29,40 @@ public class VoucherController {
         @GetMapping("/transactions/{id}")
         public ResponseEntity<byte[]> exportVoucherPdf(@PathVariable Long id) {
                 Transaction tx = transactionRepository.findById(id)
-                                .orElseThrow(() -> new RuntimeException("Không tìm thấy Giao dịch với ID: " + id));
+                                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Giao dịch với ID: " + id));
 
                 byte[] pdfBytes = pdfExportService.generateVoucher(id);
 
                 String prefix = "INCOME".equalsIgnoreCase(tx.getType()) ? "phieu-thu-" : "phieu-chi-";
-                String filename = prefix + tx.getTransaction_code() + ".pdf";
+                String transactionCode = tx.getTransaction_code() != null ? tx.getTransaction_code() : String.valueOf(tx.getId());
+                String filename = prefix + transactionCode + ".pdf";
 
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_PDF);
                 headers.setContentDisposition(ContentDisposition.attachment()
+                                .filename(filename, StandardCharsets.UTF_8)
+                                .build());
+                headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+
+                return ResponseEntity.ok()
+                                .headers(headers)
+                                .body(pdfBytes);
+        }
+
+        @GetMapping("/transactions/{id}/preview")
+        public ResponseEntity<byte[]> previewVoucherPdf(@PathVariable Long id) {
+                Transaction tx = transactionRepository.findById(id)
+                                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Giao dịch với ID: " + id));
+
+                byte[] pdfBytes = pdfExportService.generateVoucher(id);
+
+                String prefix = "INCOME".equalsIgnoreCase(tx.getType()) ? "phieu-thu-" : "phieu-chi-";
+                String transactionCode = tx.getTransaction_code() != null ? tx.getTransaction_code() : String.valueOf(tx.getId());
+                String filename = prefix + transactionCode + ".pdf";
+
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_PDF);
+                headers.setContentDisposition(ContentDisposition.inline()
                                 .filename(filename, StandardCharsets.UTF_8)
                                 .build());
                 headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
