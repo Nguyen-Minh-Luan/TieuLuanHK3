@@ -19,6 +19,7 @@ public class FundDTO {
     private String code;
     private String note;
     private LocalDateTime updatedAt;
+    private String accountCode;
     // XEM LẠI MẪU PHIẾU THU , CHI CỦA BỘ NHÀ NƯỚC ,
     //  XUẤT PHIẾU THU CHI THEO BỘ CỦA NHÀ NƯỚC , XUẤT BÁO CÁO THEO BỘ CỦA NHÀ NƯỚC
 

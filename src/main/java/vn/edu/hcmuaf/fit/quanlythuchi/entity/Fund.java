@@ -37,4 +37,7 @@ public class Fund {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "account_code", length = 10)
+    private String accountCode;
 }

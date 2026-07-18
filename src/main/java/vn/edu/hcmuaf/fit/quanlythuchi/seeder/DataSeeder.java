@@ -37,6 +37,7 @@ public class DataSeeder implements CommandLineRunner {
     private final PartnerRepository partnerRepository;
     private final DebtRepository debtRepository;
     private final TransactionRepository transactionRepository;
+    private final ChartOfAccountRepository chartOfAccountRepository;
 
     private final BCryptPasswordEncoder hashMachine = new BCryptPasswordEncoder();
 
@@ -48,6 +49,7 @@ public class DataSeeder implements CommandLineRunner {
         }
         System.out.println("--- [DataSeeder] Bắt đầu seeding dữ liệu mẫu ---");
 
+        seedChartOfAccounts();
         List<User> users = seedUsers();
         List<Category> categories = seedCategories();
         List<Fund> funds = seedFunds();
@@ -100,35 +102,57 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     // ================================================================
+    // CHART OF ACCOUNTS
+    // ================================================================
+    private void seedChartOfAccounts() {
+        if (chartOfAccountRepository.count() > 0) return;
+        List<ChartOfAccount> list = new ArrayList<>();
+        list.add(new ChartOfAccount("111", "Tiền mặt", AccountGroup.ASSET));
+        list.add(new ChartOfAccount("112", "Tiền gửi ngân hàng", AccountGroup.ASSET));
+        list.add(new ChartOfAccount("131", "Phải thu của khách hàng", AccountGroup.ASSET));
+        list.add(new ChartOfAccount("152", "Nguyên liệu, vật liệu", AccountGroup.ASSET));
+        list.add(new ChartOfAccount("331", "Phải trả cho người bán", AccountGroup.LIABILITY));
+        list.add(new ChartOfAccount("511", "Doanh thu bán hàng và cung cấp dịch vụ", AccountGroup.REVENUE));
+        list.add(new ChartOfAccount("515", "Doanh thu hoạt động tài chính", AccountGroup.REVENUE));
+        list.add(new ChartOfAccount("632", "Giá vốn hàng bán", AccountGroup.EXPENSE));
+        list.add(new ChartOfAccount("641", "Chi phí bán hàng", AccountGroup.EXPENSE));
+        list.add(new ChartOfAccount("642", "Chi phí quản lý doanh nghiệp", AccountGroup.EXPENSE));
+        list.add(new ChartOfAccount("711", "Thu nhập khác", AccountGroup.OTHER_INCOME));
+        list.add(new ChartOfAccount("811", "Chi phí khác", AccountGroup.OTHER_EXPENSE));
+        chartOfAccountRepository.saveAll(list);
+    }
+
+    // ================================================================
     // CATEGORIES
     // ================================================================
     private List<Category> seedCategories() {
         List<Category> list = new ArrayList<>();
 
         list.add(buildCategory("Lương nhân viên", CategoryType.INCOME,
-                "Thu nhập từ lương hàng tháng", 0.0, 0));
+                "Thu nhập từ lương hàng tháng", 0.0, 0, "511"));
         list.add(buildCategory("Doanh thu bán hàng", CategoryType.INCOME,
-                "Doanh thu từ hoạt động bán hàng, cung cấp dịch vụ", 0.0, 10));
+                "Doanh thu từ hoạt động bán hàng, cung cấp dịch vụ", 0.0, 10, "511"));
         list.add(buildCategory("Thu nhập khác", CategoryType.INCOME,
-                "Các khoản thu nhập phát sinh khác", 0.0, 0));
+                "Các khoản thu nhập phát sinh khác", 0.0, 0, "711"));
         list.add(buildCategory("Chi phí văn phòng", CategoryType.EXPENSE,
-                "Chi phí văn phòng phẩm, thuê mặt bằng", 5_000_000.0, 0));
+                "Chi phí văn phòng phẩm, thuê mặt bằng", 5_000_000.0, 0, "642"));
         list.add(buildCategory("Chi phí marketing", CategoryType.EXPENSE,
-                "Chi phí quảng cáo, truyền thông", 10_000_000.0, 0));
+                "Chi phí quảng cáo, truyền thông", 10_000_000.0, 0, "641"));
         list.add(buildCategory("Mua nguyên vật liệu", CategoryType.EXPENSE,
-                "Chi phí nhập nguyên vật liệu, hàng hoá", 20_000_000.0, 0));
+                "Chi phí nhập nguyên vật liệu, hàng hoá", 20_000_000.0, 0, "152"));
 
         return categoryRepository.saveAll(list);
     }
 
     private Category buildCategory(String name, CategoryType type, String description,
-                                   Double budgeting, Integer tax) {
+                                   Double budgeting, Integer tax, String accountCode) {
         return Category.builder()
                 .name(name)
                 .type(type)
                 .description(description)
                 .budgeting(java.math.BigDecimal.valueOf(budgeting))
                 .tax(tax)
+                .accountCode(accountCode)
                 .isDeleted(false)
                 .build();
     }
@@ -140,17 +164,17 @@ public class DataSeeder implements CommandLineRunner {
         List<Fund> list = new ArrayList<>();
 
         list.add(buildFund("Quỹ tiền mặt", "CASH", 50_000_000.0, 50_000_000.0,
-                "ACTIVE", "QUY-001", "Quỹ tiền mặt tại văn phòng"));
+                "ACTIVE", "QUY-001", "Quỹ tiền mặt tại văn phòng", "111"));
         list.add(buildFund("Tài khoản Vietcombank", "BANK", 200_000_000.0, 200_000_000.0,
-                "ACTIVE", "QUY-002", "Tài khoản thanh toán chính tại Vietcombank"));
+                "ACTIVE", "QUY-002", "Tài khoản thanh toán chính tại Vietcombank", "112"));
         list.add(buildFund("Tài khoản Techcombank", "BANK", 80_000_000.0, 80_000_000.0,
-                "ACTIVE", "QUY-003", "Tài khoản phụ dùng cho chi tiêu vận hành"));
+                "ACTIVE", "QUY-003", "Tài khoản phụ dùng cho chi tiêu vận hành", "112"));
 
         return fundRepository.saveAll(list);
     }
 
     private Fund buildFund(String name, String type, Double initialBalance, Double currentBalance,
-                           String status, String code, String note) {
+                           String status, String code, String note, String accountCode) {
         Fund f = new Fund();
         f.setName(name);
         f.setType(type);
@@ -159,6 +183,7 @@ public class DataSeeder implements CommandLineRunner {
         f.setStatus(status);
         f.setCode(code);
         f.setNote(note);
+        f.setAccountCode(accountCode);
         f.setIsDeleted(false);
         f.setCreated_at(date(2025, 1, 1));
         return f;

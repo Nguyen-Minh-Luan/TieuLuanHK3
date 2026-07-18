@@ -43,6 +43,7 @@ public class FundServiceImpl implements FundService {
         fund.setStatus(request.getStatus());
         fund.setCode(request.getCode());
         fund.setNote(request.getNote());
+        fund.setAccountCode(request.getAccountCode());
         fund.setIsDeleted(false);
         fund.setCreated_at(new Date());
         return toDTO(fundRepository.save(fund));
@@ -77,6 +78,9 @@ public class FundServiceImpl implements FundService {
                 }
                 if (request.getNote() != null) {
                     existingFund.setNote(request.getNote());
+                }
+                if (request.getAccountCode() != null) {
+                    existingFund.setAccountCode(request.getAccountCode());
                 }
                 return toDTO(fundRepository.save(existingFund));
             }).orElseThrow(() -> new RuntimeException("Không tìm thấy nguồn tiền với ID: " + id));
@@ -159,6 +163,7 @@ public class FundServiceImpl implements FundService {
                 .currentBalance(fund.getCurrentBalance())
                 .code(fund.getCode())
                 .note(fund.getNote())
+                .accountCode(fund.getAccountCode())
                 .updatedAt(fund.getUpdatedAt())
                 .build();
     }

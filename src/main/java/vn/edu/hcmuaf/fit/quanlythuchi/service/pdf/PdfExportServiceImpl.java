@@ -43,6 +43,27 @@ public class    PdfExportServiceImpl implements PdfExportService {
         long amountVal = transaction.getAmount() != null ? transaction.getAmount().longValue() : 0L;
         context.setVariable("amountInWords", MoneyToWordsConverter.convert(amountVal));
 
+        String debitAccount = "";
+        String creditAccount = "";
+
+        if (transaction.getType() != null) {
+            String fundAccount = transaction.getFund() != null && transaction.getFund().getAccountCode() != null 
+                ? transaction.getFund().getAccountCode() : "";
+            String categoryAccount = transaction.getCategories() != null && transaction.getCategories().getAccountCode() != null 
+                ? transaction.getCategories().getAccountCode() : "";
+
+            if (transaction.getType().toUpperCase().contains("INCOME")) {
+                debitAccount = fundAccount;
+                creditAccount = categoryAccount;
+            } else if (transaction.getType().toUpperCase().contains("EXPENSE")) {
+                debitAccount = categoryAccount;
+                creditAccount = fundAccount;
+            }
+        }
+        
+        context.setVariable("debitAccount", debitAccount);
+        context.setVariable("creditAccount", creditAccount);
+
         String htmlContent = templateEngine.process("PrintTransaction", context);
 
         // ✅ FIX: Dùng Jsoup parse HTML bình thường → convert sang XHTML hợp lệ

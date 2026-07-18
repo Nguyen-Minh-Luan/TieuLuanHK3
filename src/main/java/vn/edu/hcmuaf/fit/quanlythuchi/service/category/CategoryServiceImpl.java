@@ -10,6 +10,8 @@ import vn.edu.hcmuaf.fit.quanlythuchi.dto.CategoryDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.Category;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.CategoryType;
 import vn.edu.hcmuaf.fit.quanlythuchi.repository.CategoryRepository;
+import vn.edu.hcmuaf.fit.quanlythuchi.repository.ChartOfAccountRepository;
+import vn.edu.hcmuaf.fit.quanlythuchi.entity.ChartOfAccount;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -20,6 +22,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService{
     private final CategoryRepository categoryRepository;
+    private final ChartOfAccountRepository chartOfAccountRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -59,6 +62,7 @@ public class CategoryServiceImpl implements CategoryService{
                 .description(dto.getDescription())
                 .budgeting(dto.getBudgeting())
                 .tax(dto.getTax())
+                .accountCode(dto.getAccountCode())
                 .isDeleted(false) // Mặc định khi tạo là chưa xóa
                 .build();
 
@@ -95,6 +99,10 @@ public class CategoryServiceImpl implements CategoryService{
 
         if (dto.getTax() != null) {
             category.setTax(dto.getTax());
+        }
+        
+        if (dto.getAccountCode() != null) {
+            category.setAccountCode(dto.getAccountCode());
         }
 
         // 3. Xử lý logic parentId đặc biệt
@@ -153,6 +161,13 @@ public class CategoryServiceImpl implements CategoryService{
     }
 
     private CategoryDTO mapToDTO(Category category) {
+        String accountName = null;
+        if (category.getAccountCode() != null) {
+            accountName = chartOfAccountRepository.findById(category.getAccountCode())
+                    .map(ChartOfAccount::getName)
+                    .orElse(null);
+        }
+
         return CategoryDTO.builder()
                 .id(category.getId())
                 .name(category.getName())
@@ -161,6 +176,8 @@ public class CategoryServiceImpl implements CategoryService{
                 .budgeting(category.getBudgeting())
                 .tax(category.getTax())
                 .parentId(category.getParent() != null ? category.getParent().getId() : null)
+                .accountCode(category.getAccountCode())
+                .accountName(accountName)
                 .build();
     }
 }

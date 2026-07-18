@@ -43,4 +43,7 @@ public class Category {
 
     @Column(name="is_deleted")
     private Boolean isDeleted = false;
+
+    @Column(name = "account_code", length = 10)
+    private String accountCode;
 }

@@ -197,8 +197,8 @@
                 <div style="padding-right: 10px;">Số: <span class="bold"
                                                             th:text="${tx != null ? tx.transaction_code : '.....................................'}">.....................................</span>
                 </div>
-                <div style="padding-right: 10px;">Nợ: .....................................</div>
-                <div style="padding-right: 10px;">Có: .....................................</div>
+                <div style="padding-right: 10px;">Nợ: <span class="bold" th:text="${debitAccount != null && debitAccount != '' ? debitAccount : '.....................................'}">.....................................</span></div>
+                <div style="padding-right: 10px;">Có: <span class="bold" th:text="${creditAccount != null && creditAccount != '' ? creditAccount : '.....................................'}">.....................................</span></div>
             </td>
         </tr>
     </table>
