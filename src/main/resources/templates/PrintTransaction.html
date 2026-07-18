@@ -216,7 +216,7 @@
         </tr>
         <tr>
             <td class="label-field" th:text="${tx != null && tx.type == 'INCOME' ? 'Lý do thu:' : 'Lý do chi:'}"></td>
-            <td class="dots-field" th:text="${tx != null ? tx.reason : ''}"></td>
+            <td class="dots-field" th:text="${tx != null ? tx.note : ''}"></td>
         </tr>
         <tr>
             <td class="label-field">Số tiền:</td>

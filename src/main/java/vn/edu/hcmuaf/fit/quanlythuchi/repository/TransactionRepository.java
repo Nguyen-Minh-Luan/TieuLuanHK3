@@ -76,8 +76,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
            "WHERE " +
            "(:keyword IS NULL OR " +
            "  LOWER(t.transaction_code) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-           "  LOWER(t.note)             LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-           "  LOWER(t.reason)           LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
+           "  LOWER(t.note)             LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
            "(:type       IS NULL OR t.type            = :type) AND " +
            "(:status     IS NULL OR t.status          = :status) AND " +
            "(:fundId     IS NULL OR t.fund.id         = :fundId) AND " +

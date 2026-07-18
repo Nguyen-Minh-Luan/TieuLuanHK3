@@ -38,7 +38,6 @@ public class Transaction {
     private String status;
     private Date created_at;
     private Date datetime;
-    private String reason;
     @Column(name = "accompanied_by")
     private String accompaniedBy;
     @Column(name = "original_documents")

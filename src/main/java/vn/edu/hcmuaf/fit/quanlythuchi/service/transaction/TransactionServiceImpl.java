@@ -95,7 +95,6 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setType(request.getType().toUpperCase());
         transaction.setAmount(request.getAmount());
         transaction.setNote(request.getNote());
-        transaction.setReason(request.getReason());
         transaction.setAccompaniedBy(request.getAccompaniedBy());
         transaction.setOriginalDocuments(request.getOriginalDocuments());
 
@@ -230,7 +229,6 @@ public class TransactionServiceImpl implements TransactionService {
         newTx.setType(newRequest.getType() != null ? newRequest.getType().toUpperCase() : oldTx.getType());
         newTx.setAmount(newRequest.getAmount() != null ? newRequest.getAmount() : oldTx.getAmount());
         newTx.setNote(newRequest.getNote() != null ? newRequest.getNote() : oldTx.getNote());
-        newTx.setReason(newRequest.getReason() != null ? newRequest.getReason() : oldTx.getReason());
         newTx.setAccompaniedBy(
                 newRequest.getAccompaniedBy() != null ? newRequest.getAccompaniedBy() : oldTx.getAccompaniedBy());
         newTx.setOriginalDocuments(newRequest.getOriginalDocuments() != null ? newRequest.getOriginalDocuments()
@@ -387,12 +385,12 @@ public class TransactionServiceImpl implements TransactionService {
                 .status(tx.getStatus())
                 .amount(tx.getAmount())
                 .note(tx.getNote())
+                .userName(tx.getUser() != null ? tx.getUser().getFullName() : null)
                 .transactionCode(tx.getTransaction_code())
                 .transactionDate(tx.getTransaction_date())
                 .createdAt(tx.getCreated_at())
                 .hasWarning(tx.getHasWarning())
                 .warningLevel(tx.getWarningLevel() != null ? tx.getWarningLevel() : "NORMAL")
-                .reason(tx.getReason())
                 .accompaniedBy(tx.getAccompaniedBy())
                 .originalDocuments(tx.getOriginalDocuments())
                 .debtId(tx.getDebt() != null ? tx.getDebt().getId() : null)

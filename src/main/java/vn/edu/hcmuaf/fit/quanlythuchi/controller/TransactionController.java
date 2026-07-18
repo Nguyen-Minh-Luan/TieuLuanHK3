@@ -57,7 +57,12 @@ public class TransactionController {
     @PostMapping
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_KETOAN')")
     public ResponseEntity<ApiResponse<TransactionWithWarningDTO>> createTransaction(
-            @RequestBody TransactionDTO requestDTO) {
+            @RequestBody TransactionDTO requestDTO,
+            HttpServletRequest request) {
+
+        // Bước 0: Luôn lấy userId từ JWT — không tin dữ liệu client gửi lên
+        User currentUser = getCurrentUser(request);
+        requestDTO.setUserId(currentUser.getId());
 
         // Bước 1: Phân tích cảnh báo TRƯỚC KHI lưu
         SpendingWarningDTO warning = null;

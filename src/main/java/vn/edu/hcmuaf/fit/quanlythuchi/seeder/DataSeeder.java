@@ -289,153 +289,153 @@ public class DataSeeder implements CommandLineRunner {
 
         list.add(tx("GD202606001", funds.get(1), categories.get(1), partners.get(0), users.get(1),
                 "INCOME", 45_000_000.0, "Thu tiền bán hàng đợt 1 tháng 6",
-                "ACTIVE", date(2026, 6, 2), "Thanh toán hợp đồng dịch vụ",
+                "ACTIVE", date(2026, 6, 2),
                 "Trần Thị Kế Toán", "HD-2026-001.pdf", false, "NORMAL", null));
 
         list.add(tx("GD202606002", funds.get(0), categories.get(3), null, users.get(2),
                 "EXPENSE", 3_500_000.0, "Mua văn phòng phẩm quý 2",
-                "ACTIVE", date(2026, 6, 3), "Bổ sung vật dụng văn phòng",
+                "ACTIVE", date(2026, 6, 3),
                 "Lê Văn Thu Chi", "PN-2026-014.pdf", false, "NORMAL", null));
 
         list.add(tx("GD202606003", funds.get(1), categories.get(4), partners.get(1), users.get(1),
                 "EXPENSE", 15_000_000.0, "Chi phí chạy quảng cáo Facebook/Google tháng 6",
-                "ACTIVE", date(2026, 6, 4), "Chiến dịch marketing sản phẩm mới",
+                "ACTIVE", date(2026, 6, 4),
                 "Trần Thị Kế Toán", "HD-2026-002.pdf", false, "NORMAL", null));
 
         list.add(tx("GD202606004", funds.get(2), categories.get(0), null, users.get(0),
                 "EXPENSE", 60_000_000.0, "Chi trả lương nhân viên tháng 6",
-                "ACTIVE", date(2026, 6, 5), "Bảng lương tháng 6/2026",
+                "ACTIVE", date(2026, 6, 5),
                 "Nguyễn Văn Quản Trị", "BL-2026-06.xlsx", false, "NORMAL", null));
 
         list.add(tx("GD202606005", funds.get(1), categories.get(1), partners.get(2), users.get(1),
                 "INCOME_DEBT", 5_000_000.0, "Thu một phần công nợ bán hàng tháng 6",
-                "ACTIVE", date(2026, 6, 5), "Thanh toán công nợ theo phiếu D001",
+                "ACTIVE", date(2026, 6, 5),
                 "Trần Thị Kế Toán", "PT-2026-011.pdf", false, "NORMAL", debts.get(0)));
 
         list.add(tx("GD202606006", funds.get(0), categories.get(5), partners.get(1), users.get(1),
                 "EXPENSE_DEBT", 25_000_000.0, "Thanh toán nợ mua nguyên vật liệu tháng 5",
-                "ACTIVE", date(2026, 6, 2), "Tất toán công nợ theo phiếu D002",
+                "ACTIVE", date(2026, 6, 2),
                 "Trần Thị Kế Toán", "PC-2026-020.pdf", false, "NORMAL", debts.get(1)));
 
         list.add(tx("GD202606007", funds.get(0), categories.get(3), null, users.get(2),
                 "EXPENSE", 2_200_000.0, "Chi phí điện nước văn phòng tháng 6",
-                "ACTIVE", date(2026, 6, 6), "Hoá đơn điện nước định kỳ",
+                "ACTIVE", date(2026, 6, 6),
                 "Lê Văn Thu Chi", "HD-DIEN-06.pdf", false, "NORMAL", null));
 
         list.add(tx("GD202606008", funds.get(1), categories.get(2), null, users.get(1),
                 "INCOME", 6_000_000.0, "Thu nhập từ cho thuê thiết bị văn phòng",
-                "ACTIVE", date(2026, 6, 7), "Hợp đồng cho thuê ngắn hạn",
+                "ACTIVE", date(2026, 6, 7),
                 "Trần Thị Kế Toán", "HD-2026-003.pdf", false, "NORMAL", null));
 
         list.add(tx("GD202606009", funds.get(2), categories.get(5), partners.get(3), users.get(1),
                 "EXPENSE", 6_500_000.0, "Ứng trước tiền hàng nhập kho",
-                "ACTIVE", date(2026, 6, 20), "Ứng trước 1 phần công nợ D004",
+                "ACTIVE", date(2026, 6, 20),
                 "Trần Thị Kế Toán", "PC-2026-021.pdf", false, "NORMAL", null));
 
         list.add(tx("GD202606010", funds.get(1), categories.get(1), partners.get(0), users.get(2),
                 "INCOME", 30_000_000.0, "Thu tất toán hợp đồng dự án Q1/2026",
-                "ACTIVE", date(2026, 5, 1), "Thu công nợ theo phiếu D005",
+                "ACTIVE", date(2026, 5, 1),
                 "Lê Văn Thu Chi", "PT-2026-005.pdf", false, "NORMAL", debts.get(4)));
 
         list.add(tx("GD202606011", funds.get(0), categories.get(4), null, users.get(1),
                 "EXPENSE", 4_800_000.0, "Chi phí in ấn tờ rơi, banner quảng cáo",
-                "ACTIVE", date(2026, 6, 8), "Chuẩn bị sự kiện khai trương",
+                "ACTIVE", date(2026, 6, 8),
                 "Trần Thị Kế Toán", "HD-2026-004.pdf", false, "NORMAL", null));
 
         list.add(tx("GD202606012", funds.get(1), categories.get(1), partners.get(4), users.get(1),
                 "INCOME", 12_000_000.0, "Thu tiền dịch vụ tư vấn khách hàng",
-                "ACTIVE", date(2026, 6, 15), "Chờ khách hàng chuyển khoản xác nhận",
+                "ACTIVE", date(2026, 6, 15),
                 "Trần Thị Kế Toán", "HD-2026-005.pdf", true, "WARNING", null));
 
         list.add(tx("GD202606013", funds.get(0), categories.get(3), null, users.get(2),
                 "EXPENSE", 1_800_000.0, "Chi phí sửa chữa máy tính văn phòng",
-                "ACTIVE", date(2026, 6, 9), "Bảo trì thiết bị định kỳ",
+                "ACTIVE", date(2026, 6, 9),
                 "Lê Văn Thu Chi", "PN-2026-015.pdf", false, "NORMAL", null));
 
         list.add(tx("GD202606014", funds.get(2), categories.get(5), partners.get(1), users.get(1),
                 "EXPENSE", 18_000_000.0, "Nhập nguyên vật liệu sản xuất đợt 2",
-                "ACTIVE", date(2026, 6, 10), "Bổ sung tồn kho nguyên liệu",
+                "ACTIVE", date(2026, 6, 10),
                 "Trần Thị Kế Toán", "PN-2026-016.pdf", false, "NORMAL", null));
 
         list.add(tx("GD202606015", funds.get(1), categories.get(2), null, users.get(0),
                 "INCOME", 3_200_000.0, "Thu lãi tiền gửi ngân hàng tháng 6",
-                "ACTIVE", date(2026, 6, 30), "Lãi suất tiền gửi có kỳ hạn",
+                "ACTIVE", date(2026, 6, 30),
                 "Nguyễn Văn Quản Trị", "SAO-KE-06.pdf", false, "NORMAL", null));
 
         list.add(tx("GD202606016", funds.get(0), categories.get(4), partners.get(2), users.get(1),
                 "EXPENSE", 55_000_000.0, "Chi phí thuê mặt bằng văn phòng quý 3",
-                "ACTIVE", date(2026, 6, 11), "Thanh toán tiền thuê 3 tháng",
+                "ACTIVE", date(2026, 6, 11),
                 "Trần Thị Kế Toán", "HD-2026-006.pdf", true, "CRITICAL", null));
 
         list.add(tx("GD202606017", funds.get(1), categories.get(1), partners.get(3), users.get(2),
                 "INCOME", 9_500_000.0, "Thu tiền bán hàng đợt 2 tháng 6",
-                "ACTIVE", date(2026, 6, 12), "Đơn hàng số HD-778",
+                "ACTIVE", date(2026, 6, 12),
                 "Lê Văn Thu Chi", "HD-2026-007.pdf", false, "NORMAL", null));
 
         list.add(tx("GD202606018", funds.get(0), categories.get(3), null, users.get(1),
                 "EXPENSE", 950_000.0, "Chi phí tiếp khách công ty đối tác",
-                "ACTIVE", date(2026, 6, 13), "Gặp gỡ đối tác ABC Solutions",
+                "ACTIVE", date(2026, 6, 13),
                 "Trần Thị Kế Toán", "PN-2026-017.pdf", false, "NORMAL", null));
 
         list.add(tx("GD202606019", funds.get(2), categories.get(0), null, users.get(0),
                 "EXPENSE", 7_000_000.0, "Chi thưởng hiệu suất nhân viên quý 2",
-                "ACTIVE", date(2026, 6, 25), "Thưởng KPI quý 2/2026",
+                "ACTIVE", date(2026, 6, 25),
                 "Nguyễn Văn Quản Trị", "QD-2026-002.pdf", false, "NORMAL", null));
 
         list.add(tx("GD202606020", funds.get(1), categories.get(1), partners.get(4), users.get(1),
                 "EXPENSE", 5_000_000.0, "Hủy giao dịch đặt cọc do đối tác đổi ý",
-                "CANCELLED", date(2026, 6, 28), "Chờ ký kết hợp đồng chính thức nhưng thất bại",
+                "CANCELLED", date(2026, 6, 28),
                 "Trần Thị Kế Toán", "HD-2026-008.pdf", false, "NORMAL", null));
 
         // 10 Giao dịch bổ sung mới
         list.add(tx("GD202606021", funds.get(1), categories.get(1), partners.get(4), users.get(3),
                 "INCOME_DEBT", 8_000_000.0, "Thu hồi nợ - Tất toán tiền nợ dịch vụ tư vấn",
-                "ACTIVE", date(2026, 6, 30), "Tất toán công nợ theo phiếu D003",
+                "ACTIVE", date(2026, 6, 30),
                 "Nguyen Minh Luan", "PT-2026-021.pdf", false, "NORMAL", debts.get(2)));
 
         list.add(tx("GD202606022", funds.get(2), categories.get(5), partners.get(3), users.get(1),
                 "EXPENSE_DEBT", 6_000_000.0, "Thanh toán nợ - Trả nợ tiền hàng nhập kho đợt 2",
-                "ACTIVE", date(2026, 6, 25), "Trả bớt công nợ D004",
+                "ACTIVE", date(2026, 6, 25),
                 "Trần Thị Kế Toán", "PC-2026-025.pdf", false, "NORMAL", debts.get(3)));
 
         list.add(tx("GD202606023", funds.get(0), categories.get(3), null, users.get(2),
                 "EXPENSE", 1_500_000.0, "Chi phí mua trà, cafe, nước uống văn phòng tháng 6",
-                "ACTIVE", date(2026, 6, 26), "Tiền tạp phí văn phòng",
+                "ACTIVE", date(2026, 6, 26),
                 "Lê Văn Thu Chi", "PN-2026-019.pdf", false, "NORMAL", null));
 
         list.add(tx("GD202606024", funds.get(1), categories.get(4), partners.get(0), users.get(1),
                 "EXPENSE", 22_000_000.0, "Chi phí tổ chức Workshop giới thiệu giải pháp công nghệ",
-                "ACTIVE", date(2026, 6, 27), "Sự kiện Marketing kết hợp ABC Solutions",
+                "ACTIVE", date(2026, 6, 27),
                 "Trần Thị Kế Toán", "HD-2026-009.pdf", true, "WARNING", null));
 
         list.add(tx("GD202606025", funds.get(1), categories.get(1), partners.get(0), users.get(1),
                 "INCOME", 55_000_000.0, "Thu tiền nghiệm thu dự án phần mềm giai đoạn 2",
-                "ACTIVE", date(2026, 6, 29), "Nghiệm thu hợp đồng ABC-02",
+                "ACTIVE", date(2026, 6, 29),
                 "Trần Thị Kế Toán", "PT-2026-022.pdf", false, "NORMAL", null));
 
         list.add(tx("GD202607001", funds.get(1), categories.get(1), partners.get(2), users.get(2),
                 "INCOME", 14_500_000.0, "Doanh thu bán lô hàng linh kiện điện tử đầu tháng 7",
-                "ACTIVE", date(2026, 7, 1), "Bán lẻ cho khách hàng Nguyễn Văn Bình",
+                "ACTIVE", date(2026, 7, 1),
                 "Lê Văn Thu Chi", "HD-2026-010.pdf", false, "NORMAL", null));
 
         list.add(tx("GD202607002", funds.get(0), categories.get(3), null, users.get(2),
                 "EXPENSE", 4_200_000.0, "Chi phí gửi xe và dọn dẹp vệ sinh tòa nhà tháng 7",
-                "ACTIVE", date(2026, 7, 2), "Phí dịch vụ tòa nhà định kỳ",
+                "ACTIVE", date(2026, 7, 2),
                 "Lê Văn Thu Chi", "HD-QLTN-07.pdf", false, "NORMAL", null));
 
         list.add(tx("GD202607003", funds.get(2), categories.get(5), partners.get(1), users.get(1),
                 "EXPENSE", 35_000_000.0, "Nhập kho lô nguyên vật liệu nhựa chính tháng 7",
-                "ACTIVE", date(2026, 7, 3), "Hợp đồng cung ứng vật liệu với XYZ Trading",
+                "ACTIVE", date(2026, 7, 3),
                 "Trần Thị Kế Toán", "PN-2026-021.pdf", true, "CRITICAL", null));
 
         list.add(tx("GD202607004", funds.get(1), categories.get(2), null, users.get(0),
                 "INCOME", 2_500_000.0, "Thu tiền thanh lý bàn ghế cũ văn phòng",
-                "ACTIVE", date(2026, 7, 4), "Thanh lý tài sản cũ không sử dụng",
+                "ACTIVE", date(2026, 7, 4),
                 "Nguyễn Văn Quản Trị", "BBTL-2026-01.pdf", false, "NORMAL", null));
 
         list.add(tx("GD202607005", funds.get(1), categories.get(4), null, users.get(1),
                 "EXPENSE", 8_000_000.0, "Tạm ứng chi phí chạy Ads Google đầu tháng 7",
-                "ACTIVE", date(2026, 7, 5), "Ngân sách Marketing chạy sản phẩm mới",
+                "ACTIVE", date(2026, 7, 5),
                 "Trần Thị Kế Toán", "DN-2026-005.pdf", false, "NORMAL", null));
 
         transactionRepository.saveAll(list);
@@ -443,7 +443,7 @@ public class DataSeeder implements CommandLineRunner {
 
     private Transaction tx(String code, Fund fund, Category category, Partner partner, User user,
                            String type, Double amount, String note, String status, Date transactionDate,
-                           String reason, String accompaniedBy, String originalDocuments,
+                           String accompaniedBy, String originalDocuments,
                            Boolean hasWarning, String warningLevel, Debt debt) {
         Transaction t = new Transaction();
         t.setFund(fund);
@@ -460,7 +460,6 @@ public class DataSeeder implements CommandLineRunner {
         t.setStatus(status);
         t.setCreated_at(transactionDate);
         t.setDatetime(transactionDate);
-        t.setReason(reason);
         t.setAccompaniedBy(accompaniedBy);
         t.setOriginalDocuments(originalDocuments);
         t.setHasWarning(hasWarning);

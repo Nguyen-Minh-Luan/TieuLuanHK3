@@ -305,7 +305,6 @@ public class DebtServiceImpl implements DebtService {
                 .transactionCode(tx.getTransaction_code())
                 .transactionDate(tx.getTransaction_date())
                 .createdAt(tx.getCreated_at())
-                .reason(tx.getReason())
                 .debtId(tx.getDebt() != null ? tx.getDebt().getId() : null)
                 .build();
     }
