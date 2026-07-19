@@ -60,7 +60,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     Double getCurrentMonthTotalByCategory(@Param("categoryId") Long categoryId);
 
     /** Lấy tất cả phiếu thu/chi đã thanh toán cho một khoản nợ theo trạng thái */
-    List<Transaction> findByDebt_IdAndStatus(Long debtId, String status);
+    List<Transaction> findByDebt_IdAndStatus(Long debtId, vn.edu.hcmuaf.fit.quanlythuchi.entity.TransactionStatus status);
 
     @Query("SELECT t FROM Transaction t WHERE t.status != 'CANCELLED'")
     Page<Transaction> findAllActive(Pageable pageable);
@@ -88,7 +88,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     Page<Transaction> searchTransactions(
         @Param("keyword")    String keyword,
         @Param("type")       String type,
-        @Param("status")     String status,
+        @Param("status")     vn.edu.hcmuaf.fit.quanlythuchi.entity.TransactionStatus status,
         @Param("fundId")     Long fundId,
         @Param("categoryId") Long categoryId,
         @Param("partnerId")  Long partnerId,

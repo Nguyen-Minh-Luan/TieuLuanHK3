@@ -35,7 +35,8 @@ public class Transaction {
     private Double amount;
     private String amountInWord;
     private String note;
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private TransactionStatus status;
     private Date created_at;
     private Date datetime;
     @Column(name = "accompanied_by")

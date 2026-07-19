@@ -103,7 +103,7 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setTransaction_date(txDate);
         transaction.setCreated_at(new Date());
         transaction.setDatetime(new Date());
-        transaction.setStatus("ACTIVE");
+        transaction.setStatus(TransactionStatus.ACTIVE);
         transaction.setHasWarning(request.getHasWarning());
         transaction.setWarningLevel(request.getWarningLevel() != null ? request.getWarningLevel() : "NORMAL");
 
@@ -174,13 +174,13 @@ public class TransactionServiceImpl implements TransactionService {
         }
 
         // 2. ĐÁNH DẤU BẢN GHI CŨ LÀ UPDATED
-        oldTx.setStatus("UPDATED");
+        oldTx.setStatus(TransactionStatus.UPDATED);
         transactionRepository.save(oldTx);
 
         // 3. TẠO BẢN GHI MỚI VÀ MAP DỮ LIỆU
         Transaction newTx = new Transaction();
         newTx.setParentId(oldId);
-        newTx.setStatus("ACTIVE");
+        newTx.setStatus(TransactionStatus.ACTIVE);
 
         // --- Bắt đầu set các trường từ Request ---
 
@@ -275,12 +275,12 @@ public class TransactionServiceImpl implements TransactionService {
         reconciliationService.assertNotLocked(tx.getFund().getId(), tx.getTransaction_date());
 
         // 2. CHECK LOGIC: Chỉ cho phép hủy nếu giao dịch đang ở trạng thái ACTIVE
-        if (!"ACTIVE".equalsIgnoreCase(tx.getStatus())) {
+        if (TransactionStatus.ACTIVE != tx.getStatus()) {
             throw new IllegalStateException("Hủy thất bại: Chỉ có thể hủy giao dịch đang ở trạng thái ACTIVE!");
         }
 
         // 3. Đổi trạng thái thành CANCELLED
-        tx.setStatus("CANCELLED");
+        tx.setStatus(TransactionStatus.CANCELLED);
 
         // 4. Hoàn lại tiền vào quỹ
         Fund fund = tx.getFund();
@@ -331,8 +331,16 @@ public class TransactionServiceImpl implements TransactionService {
                 ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(Math.max(0, page - 1), size, sort);
+        TransactionStatus enumStatus = null;
+        if (status != null && !status.trim().isEmpty()) {
+            try {
+                enumStatus = TransactionStatus.valueOf(status.trim().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                // ignore if invalid
+            }
+        }
         return transactionRepository
-                .searchTransactions(keyword, type, status, fundId, categoryId, partnerId,
+                .searchTransactions(keyword, type, enumStatus, fundId, categoryId, partnerId,
                                     userId, fromDate, toDate, pageable)
                 .map(this::toDTO);
     }
@@ -382,7 +390,7 @@ public class TransactionServiceImpl implements TransactionService {
                 .userId(tx.getUser() != null ? tx.getUser().getId() : null)
                 .partnerId(tx.getPartner() != null ? tx.getPartner().getId() : null)
                 .type(tx.getType())
-                .status(tx.getStatus())
+                .status(tx.getStatus() != null ? tx.getStatus().name() : null)
                 .amount(tx.getAmount())
                 .note(tx.getNote())
                 .userName(tx.getUser() != null ? tx.getUser().getFullName() : null)

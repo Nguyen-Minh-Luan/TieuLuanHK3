@@ -438,6 +438,17 @@ public class DataSeeder implements CommandLineRunner {
                 "ACTIVE", date(2026, 7, 5),
                 "Trần Thị Kế Toán", "DN-2026-005.pdf", false, "NORMAL", null));
 
+        // Bản ghi với trạng thái UPDATED (phiếu cũ bị sửa)
+        list.add(tx("GD202607006", funds.get(2), categories.get(3), null, users.get(2),
+                "EXPENSE", 2_000_000.0, "Chi phí bảo trì hệ thống máy chủ (cũ, đã sửa)",
+                "UPDATED", date(2026, 7, 6),
+                "Lê Văn Thu Chi", "HD-2026-011.pdf", false, "NORMAL", null));
+
+        list.add(tx("GD202607007", funds.get(2), categories.get(3), null, users.get(2),
+                "EXPENSE", 2_500_000.0, "Chi phí bảo trì hệ thống máy chủ (mới, sau khi sửa)",
+                "ACTIVE", date(2026, 7, 6),
+                "Lê Văn Thu Chi", "HD-2026-011-NEW.pdf", false, "NORMAL", null));
+
         transactionRepository.saveAll(list);
     }
 
@@ -457,7 +468,7 @@ public class DataSeeder implements CommandLineRunner {
         t.setAmount(amount);
         t.setAmountInWord(MoneyToWordsConverter.convert(amount.longValue()));
         t.setNote(note);
-        t.setStatus(status);
+        t.setStatus(TransactionStatus.valueOf(status));
         t.setCreated_at(transactionDate);
         t.setDatetime(transactionDate);
         t.setAccompaniedBy(accompaniedBy);

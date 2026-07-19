@@ -159,7 +159,7 @@ public class DebtServiceImpl implements DebtService {
 
         // Populate lịch sử thanh toán — chỉ cho GET /debts/{id}
         List<TransactionDTO> payments = transactionRepository
-                .findByDebt_IdAndStatus(id, "ACTIVE")
+                .findByDebt_IdAndStatus(id, TransactionStatus.ACTIVE)
                 .stream()
                 .map(this::toTransactionDTO)
                 .collect(Collectors.toList());
@@ -299,7 +299,7 @@ public class DebtServiceImpl implements DebtService {
                 .userId(tx.getUser() != null ? tx.getUser().getId() : null)
                 .partnerId(tx.getPartner() != null ? tx.getPartner().getId() : null)
                 .type(tx.getType())
-                .status(tx.getStatus())
+                .status(tx.getStatus() != null ? tx.getStatus().name() : null)
                 .amount(tx.getAmount())
                 .note(tx.getNote())
                 .transactionCode(tx.getTransaction_code())
