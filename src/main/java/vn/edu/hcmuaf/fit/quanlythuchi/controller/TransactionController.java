@@ -108,6 +108,56 @@ public class TransactionController {
         return ApiResponse.created(result, responseMessage);
     }
 
+    // --- 1.1 TẠO MỚI GIAO DỊCH VÀ UPLOAD CHỨNG TỪ ---
+    @PostMapping(value = "/with-documents", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_KETOAN')")
+    public ResponseEntity<ApiResponse<TransactionWithWarningDTO>> createTransactionWithDocuments(
+            @RequestPart("transaction") TransactionDTO requestDTO,
+            @RequestPart(value = "files", required = false) java.util.List<org.springframework.web.multipart.MultipartFile> files,
+            @RequestPart(value = "descriptions", required = false) java.util.List<String> descriptions,
+            HttpServletRequest request) {
+
+        User currentUser = getCurrentUser(request);
+        requestDTO.setUserId(currentUser.getId());
+
+        SpendingWarningDTO warning = null;
+        if ("EXPENSE".equalsIgnoreCase(requestDTO.getType())
+                && requestDTO.getCategoryId() != null) {
+            warning = spendingWarningService.analyze(requestDTO.getCategoryId(), requestDTO);
+
+            if (warning != null && warning.isHasWarning()) {
+                requestDTO.setHasWarning(true);
+                requestDTO.setWarningLevel(warning.getLevel());
+            } else {
+                requestDTO.setHasWarning(false);
+                requestDTO.setWarningLevel(warning != null ? warning.getLevel() : "NORMAL");
+            }
+        } else {
+            requestDTO.setHasWarning(false);
+            requestDTO.setWarningLevel("NORMAL");
+        }
+
+        TransactionDTO savedTransaction = transactionService.createTransactionWithDocuments(requestDTO, files, descriptions, currentUser);
+        
+        if (warning != null && warning.isHasWarning()) {
+            riskNotificationService.checkAndNotifySpendingWarning(warning);
+        }
+        
+        TransactionWithWarningDTO result = TransactionWithWarningDTO.builder()
+                .transaction(savedTransaction)
+                .warning(warning)
+                .build();
+
+        String responseMessage = "Tạo giao dịch và upload chứng từ thành công";
+        if (warning != null && warning.isHasWarning()) {
+            responseMessage = "CRITICAL".equals(warning.getLevel())
+                    ? "Tạo giao dịch thành công - ⚠️ Phát hiện chi tiêu bất thường nghiêm trọng!"
+                    : "Tạo giao dịch thành công - ⚠️ Phát hiện chi tiêu vượt mức bình thường!";
+        }
+
+        return ApiResponse.created(result, responseMessage);
+    }
+
     @GetMapping("/categories/{categoryId}")
     public ResponseEntity<ApiResponse<SpendingWarningDTO>> checkWarningByCategory(
             @PathVariable Long categoryId,

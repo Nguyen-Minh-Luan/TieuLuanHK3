@@ -2,8 +2,10 @@ package vn.edu.hcmuaf.fit.quanlythuchi.service.transaction;
 
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.TransactionDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.Transaction;
+import vn.edu.hcmuaf.fit.quanlythuchi.entity.User;
 
 import java.util.Date;
 import java.util.List;
@@ -19,6 +21,7 @@ public interface TransactionService {
 //    Double getTotalIncome();
 //    Double getTotalExpense();
     TransactionDTO createTransaction(TransactionDTO requestDTO);
+    TransactionDTO createTransactionWithDocuments(TransactionDTO requestDTO, List<MultipartFile> files, List<String> descriptions, User currentUser);
     TransactionDTO updateTransaction(Long oldId, TransactionDTO newRequest);
     void cancelTransaction(Long txId);
     TransactionDTO getTransactionById(Long id);

@@ -41,6 +41,7 @@ public class Transaction {
     private Date datetime;
     @Column(name = "accompanied_by")
     private String accompaniedBy;
+    @Deprecated
     @Column(name = "original_documents")
     private String originalDocuments;
     @Column(name = "has_warning")

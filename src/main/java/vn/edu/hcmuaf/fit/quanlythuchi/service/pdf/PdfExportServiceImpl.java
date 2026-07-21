@@ -11,6 +11,11 @@ import vn.edu.hcmuaf.fit.quanlythuchi.entity.Transaction;
 import vn.edu.hcmuaf.fit.quanlythuchi.repository.TransactionRepository;
 import vn.edu.hcmuaf.fit.quanlythuchi.util.MoneyToWordsConverter;
 
+import vn.edu.hcmuaf.fit.quanlythuchi.entity.OriginalDocument;
+import vn.edu.hcmuaf.fit.quanlythuchi.repository.OriginalDocumentRepository;
+
+import java.util.List;
+import java.util.stream.Collectors;
 import org.jsoup.Jsoup;
 import org.jsoup.helper.W3CDom;
 import org.jsoup.nodes.Document;
@@ -19,9 +24,10 @@ import java.io.IOException;
 
 @Service
 @RequiredArgsConstructor
-public class    PdfExportServiceImpl implements PdfExportService {
+public class PdfExportServiceImpl implements PdfExportService {
 
     private final TransactionRepository transactionRepository;
+    private final OriginalDocumentRepository originalDocumentRepository;
     private final TemplateEngine templateEngine;
 
     @Value("${voucher.company.name:Công ty TNHH Giải Pháp Tài Chính Việt Nam}")
@@ -42,6 +48,15 @@ public class    PdfExportServiceImpl implements PdfExportService {
 
         long amountVal = transaction.getAmount() != null ? transaction.getAmount().longValue() : 0L;
         context.setVariable("amountInWords", MoneyToWordsConverter.convert(amountVal));
+
+        List<OriginalDocument> docs = originalDocumentRepository.findByTransaction_Id(transactionId);
+        String documentCodes = "";
+        if (docs != null && !docs.isEmpty()) {
+            documentCodes = docs.stream().map(OriginalDocument::getDocumentCode).collect(Collectors.joining(", "));
+        } else if (transaction.getOriginalDocuments() != null && !transaction.getOriginalDocuments().trim().isEmpty()) {
+            documentCodes = transaction.getOriginalDocuments();
+        }
+        context.setVariable("documentCodes", documentCodes);
 
         String debitAccount = "";
         String creditAccount = "";

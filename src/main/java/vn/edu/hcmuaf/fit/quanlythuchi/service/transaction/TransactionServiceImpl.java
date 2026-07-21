@@ -31,6 +31,8 @@ public class TransactionServiceImpl implements TransactionService {
     private final DebtRepository debtRepository;
     private final DebtService debtService;
     private final FundReconciliationService reconciliationService;
+    private final OriginalDocumentRepository originalDocumentRepository;
+    private final vn.edu.hcmuaf.fit.quanlythuchi.service.document.OriginalDocumentService originalDocumentService;
 
     @Override
     @Transactional
@@ -142,6 +144,35 @@ public class TransactionServiceImpl implements TransactionService {
         }
 
         return toDTO(savedTransaction);
+    }
+
+    @Override
+    @Transactional
+    public TransactionDTO createTransactionWithDocuments(TransactionDTO requestDTO, List<org.springframework.web.multipart.MultipartFile> files, List<String> descriptions, User currentUser) {
+        // Validate files early
+        if (files != null && !files.isEmpty()) {
+            for (org.springframework.web.multipart.MultipartFile file : files) {
+                if (file.isEmpty()) throw new IllegalArgumentException("File không được để trống");
+                if (file.getSize() > 5 * 1024 * 1024) throw new IllegalArgumentException("Kích thước file không được vượt quá 5MB");
+                if (!java.util.Arrays.asList("image/jpeg", "image/png", "image/webp").contains(file.getContentType())) {
+                    throw new IllegalArgumentException("Định dạng file không được hỗ trợ (chỉ nhận jpeg, png, webp)");
+                }
+            }
+        }
+
+        TransactionDTO savedDto = createTransaction(requestDTO);
+        Transaction tx = transactionRepository.findById(savedDto.getId())
+                .orElseThrow(() -> new RuntimeException("Không thể tìm thấy giao dịch vừa tạo"));
+
+        if (files != null && !files.isEmpty()) {
+            for (int i = 0; i < files.size(); i++) {
+                String desc = (descriptions != null && descriptions.size() > i) ? descriptions.get(i) : null;
+                OriginalDocument doc = originalDocumentService.buildDocument(files.get(i), desc, currentUser, tx);
+                originalDocumentRepository.save(doc);
+            }
+        }
+
+        return toDTO(tx);
     }
 
     @Override
@@ -382,6 +413,14 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     public TransactionDTO toDTO(Transaction tx) {
+        List<OriginalDocument> docs = originalDocumentRepository.findByTransaction_Id(tx.getId());
+        String documentCodes = "";
+        if (docs != null && !docs.isEmpty()) {
+            documentCodes = docs.stream().map(OriginalDocument::getDocumentCode).collect(Collectors.joining(", "));
+        } else if (tx.getOriginalDocuments() != null && !tx.getOriginalDocuments().trim().isEmpty()) {
+            documentCodes = tx.getOriginalDocuments();
+        }
+
         return TransactionDTO.builder()
                 .id(tx.getId())
                 .parentId(tx.getParentId() != null ? tx.getParentId() : null)
@@ -400,7 +439,7 @@ public class TransactionServiceImpl implements TransactionService {
                 .hasWarning(tx.getHasWarning())
                 .warningLevel(tx.getWarningLevel() != null ? tx.getWarningLevel() : "NORMAL")
                 .accompaniedBy(tx.getAccompaniedBy())
-                .originalDocuments(tx.getOriginalDocuments())
+                .originalDocuments(documentCodes)
                 .debtId(tx.getDebt() != null ? tx.getDebt().getId() : null)
                 .build();
     }

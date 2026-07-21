@@ -31,7 +31,17 @@ public class FinancialPromptBuilder {
                 "   rủi ro thanh khoản nếu có khoản nợ phải trả sát hạn (danh sách debtAlerts).\n" +
                 "\n" +
                 "Chỉ trả lời dựa trên dữ liệu được cung cấp, không suy diễn số liệu không có.\n" +
-                "Trả lời BẮT BUỘC đúng theo JSON schema quy định, bằng tiếng Việt.";
+                "Trả lời BẮT BUỘC đúng theo JSON schema quy định, bằng tiếng Việt."+
+                "\n" +
+                "QUY TẮC BẮT BUỘC VỀ SỐ LIỆU:\n" +
+                "- TUYỆT ĐỐI KHÔNG được tự tính toán, ước lượng, làm tròn khác, hay suy ra bất kỳ con số nào " +
+                "không có sẵn trong JSON dữ liệu được cung cấp.\n" +
+                "- Mọi con số xuất hiện trong câu trả lời (VNĐ, %, số ngày) PHẢI được lấy nguyên văn từ các trường " +
+                "tương ứng trong JSON (ví dụ: overagePercent, currentMonth, historicalAverage, remaining, daysUntilDue, " +
+                "totalIncome, totalExpense, netBalance).\n" +
+                "- Nếu cần so sánh, chỉ được dùng phép trừ/chia đơn giản trên các số đã cho và phải nêu rõ đó là số nào " +
+                "trừ/chia cho số nào, không phát sinh số liệu mới ngoài dữ liệu gốc.\n" +
+                "- Nếu dữ liệu không đủ để đưa ra nhận định, hãy nói rõ 'không đủ dữ liệu' thay vì suy diễn.\n";
     }
 
     public String buildDataPrompt(FinancialSnapshotDTO snapshot) {
