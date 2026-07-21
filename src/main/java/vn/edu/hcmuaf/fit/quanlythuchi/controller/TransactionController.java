@@ -2,11 +2,14 @@ package vn.edu.hcmuaf.fit.quanlythuchi.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import vn.edu.hcmuaf.fit.quanlythuchi.config.ApiResponse;
 import vn.edu.hcmuaf.fit.quanlythuchi.config.JwtUtil;
+import vn.edu.hcmuaf.fit.quanlythuchi.dto.OriginalDocumentDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.PagedResponseDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.SpendingWarningDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.TransactionDTO;
@@ -18,6 +21,7 @@ import vn.edu.hcmuaf.fit.quanlythuchi.service.warning.SpendingWarningService;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
+import java.util.List;
 
 @RestController
 @RequestMapping("/transactions")
@@ -191,6 +195,28 @@ public class TransactionController {
         }
 
         return ApiResponse.ok(transactionService.updateTransaction(id, requestDTO), "Cập nhật giao dịch thành công");
+    }
+
+    // --- 2.1 THÊM CHỨNG TỪ VÀO GIAO DỊCH ĐÃ TỒN TẠI ---
+    @PatchMapping(value = "/{id}/documents", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_KETOAN')")
+    public ResponseEntity<ApiResponse<List<OriginalDocumentDTO>>> addDocumentsToTransaction(
+            @PathVariable Long id,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files,
+            @RequestPart(value = "descriptions", required = false) List<String> descriptions,
+            HttpServletRequest request) {
+
+        User currentUser = getCurrentUser(request);
+        // Ownership check: Kế toán Thu Chi chỉ được thêm chứng từ vào giao dịch của chính mình
+        if (currentUser.getRole() != null && currentUser.getRole() == 2) {
+            TransactionDTO existing = transactionService.getTransactionById(id);
+            if (!isOwnerOrAdmin(currentUser, existing)) {
+                return ApiResponse.forbidden("Bạn không có quyền thêm chứng từ vào phiếu này. Chỉ được thao tác phiếu do chính mình tạo.", "FORBIDDEN_NOT_OWNER");
+            }
+        }
+
+        List<OriginalDocumentDTO> added = transactionService.addDocumentsToTransaction(id, files, descriptions, currentUser);
+        return ApiResponse.ok(added, "Thêm chứng từ vào giao dịch thành công");
     }
 
     // --- 3. HỦY GIAO DỊCH (Admin chuyển trạng thái thành CANCELLED và hoàn tiền) ---

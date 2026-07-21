@@ -7,6 +7,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import vn.edu.hcmuaf.fit.quanlythuchi.dto.OriginalDocumentDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.TransactionDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.*;
 import vn.edu.hcmuaf.fit.quanlythuchi.repository.*;
@@ -173,6 +175,34 @@ public class TransactionServiceImpl implements TransactionService {
         }
 
         return toDTO(tx);
+    }
+
+    @Override
+    @Transactional
+    public List<OriginalDocumentDTO> addDocumentsToTransaction(
+            Long transactionId,
+            List<MultipartFile> files,
+            List<String> descriptions,
+            User uploader) {
+        Transaction tx = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy giao dịch id: " + transactionId));
+
+        if (files == null || files.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+
+        // Validate & build từng file
+        List<OriginalDocument> saved = new java.util.ArrayList<>();
+        for (int i = 0; i < files.size(); i++) {
+            MultipartFile file = files.get(i);
+            String desc = (descriptions != null && descriptions.size() > i) ? descriptions.get(i) : null;
+            OriginalDocument doc = originalDocumentService.buildDocument(file, desc, uploader, tx);
+            saved.add(originalDocumentRepository.save(doc));
+        }
+
+        return saved.stream()
+                .map(OriginalDocumentDTO::fromEntity)
+                .collect(Collectors.toList());
     }
 
     @Override

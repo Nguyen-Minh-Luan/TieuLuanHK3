@@ -32,7 +32,7 @@ public class OriginalDocumentController {
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_KETOAN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<ApiResponse<OriginalDocumentDTO>> uploadDocument(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "description", required = false) String description,
@@ -77,7 +77,7 @@ public class OriginalDocumentController {
     }
 
     @PatchMapping("/{id}/link/{transactionId}")
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_KETOAN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<ApiResponse<OriginalDocumentDTO>> linkTransaction(
             @PathVariable Long id,
             @PathVariable Long transactionId) {
@@ -86,14 +86,14 @@ public class OriginalDocumentController {
     }
 
     @PatchMapping("/{id}/unlink")
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_KETOAN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<ApiResponse<OriginalDocumentDTO>> unlinkTransaction(@PathVariable Long id) {
         OriginalDocumentDTO dto = documentService.unlinkTransaction(id);
         return ApiResponse.ok(dto, "Gỡ liên kết chứng từ thành công");
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_KETOAN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteDocument(
             @PathVariable Long id,
             HttpServletRequest request) {

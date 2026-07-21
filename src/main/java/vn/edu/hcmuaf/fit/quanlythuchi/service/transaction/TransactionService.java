@@ -3,6 +3,7 @@ package vn.edu.hcmuaf.fit.quanlythuchi.service.transaction;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import vn.edu.hcmuaf.fit.quanlythuchi.dto.OriginalDocumentDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.TransactionDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.Transaction;
 import vn.edu.hcmuaf.fit.quanlythuchi.entity.User;
@@ -23,6 +24,7 @@ public interface TransactionService {
     TransactionDTO createTransaction(TransactionDTO requestDTO);
     TransactionDTO createTransactionWithDocuments(TransactionDTO requestDTO, List<MultipartFile> files, List<String> descriptions, User currentUser);
     TransactionDTO updateTransaction(Long oldId, TransactionDTO newRequest);
+    List<OriginalDocumentDTO> addDocumentsToTransaction(Long transactionId, List<MultipartFile> files, List<String> descriptions, User uploader);
     void cancelTransaction(Long txId);
     TransactionDTO getTransactionById(Long id);
     List<TransactionDTO> getAllTransactions();
