@@ -48,9 +48,35 @@ public class AuthController {
         }
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UserResponseDTO>> getMe() {
+        try {
+            org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            String username = auth.getName();
+            UserResponseDTO profile = authService.getCurrentUserProfile(username);
+            return ApiResponse.ok(profile, "Lấy thông tin cá nhân thành công");
+        } catch (Exception e) {
+            return ApiResponse.error(e.getMessage(), "UNAUTHORIZED");
+        }
+    }
+
     @PatchMapping("/user/{id}")
     public ResponseEntity<ApiResponse<Void>> updateUser(@PathVariable Long id, @RequestBody User user) {
         try {
+            org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            String currentUsername = auth.getName();
+            boolean isAdmin = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            
+            if (!isAdmin) {
+                UserResponseDTO currentUser = authService.getCurrentUserProfile(currentUsername);
+                if (!currentUser.getId().equals(id)) {
+                    return ApiResponse.error("Bạn không có quyền cập nhật người dùng khác", "FORBIDDEN");
+                }
+                // Người dùng thường không được sửa role và status
+                user.setRole(null);
+                user.setStatus(null);
+            }
+
             authService.updateUser(id, user);
             return ApiResponse.ok(null, "Cập nhật tài khoản thành công");
         } catch (RuntimeException e) {

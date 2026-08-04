@@ -1,6 +1,7 @@
 package vn.edu.hcmuaf.fit.quanlythuchi.dto;
 
 import lombok.*;
+import java.util.Date;
 
 @Getter
 @Setter
@@ -16,6 +17,8 @@ public class UserResponseDTO {
     private String token;
     private String status;
     private String message;
+    private Date createdAt;
+    private Date updatedAt;
 }
 
 

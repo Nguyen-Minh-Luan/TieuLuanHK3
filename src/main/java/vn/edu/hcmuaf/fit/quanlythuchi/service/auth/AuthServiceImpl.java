@@ -67,6 +67,8 @@ public class AuthServiceImpl implements AuthService{
                         .email(u.getEmail())
                         .role(u.getRole())
                         .status(u.getStatus())
+                        .createdAt(u.getCreated_at())
+                        .updatedAt(u.getUpdate_at())
                         .token(jwt.generateToken(u))
                         .build();
             }
@@ -88,6 +90,14 @@ public class AuthServiceImpl implements AuthService{
         }
         return false;
     }
+
+    @Override
+    public UserResponseDTO getCurrentUserProfile(String username) {
+        User u = authRepo.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+        return toUserResponseDTO(u);
+    }
+
     @Override
     public void updateUser(Long id, User user) {
         Optional<User> optionalUser = authRepo.findById(id);
@@ -140,6 +150,8 @@ public class AuthServiceImpl implements AuthService{
                 .email(u.getEmail())
                 .role(u.getRole())
                 .status(u.getStatus())
+                .createdAt(u.getCreated_at())
+                .updatedAt(u.getUpdate_at())
                 .build();
     }
 }

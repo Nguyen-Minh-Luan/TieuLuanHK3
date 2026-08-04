@@ -212,6 +212,13 @@ public class TransactionServiceImpl implements TransactionService {
         Transaction oldTx = transactionRepository.findById(oldId)
                 .orElseThrow(() -> new RuntimeException("Giao dịch không tồn tại"));
 
+        if (oldTx.getStatus() != TransactionStatus.ACTIVE) {
+            throw new RuntimeException(
+                "Không thể chỉnh sửa giao dịch ở trạng thái " + oldTx.getStatus() +
+                ". Chỉ giao dịch ACTIVE mới được phép sửa.");
+        }
+
+
         // Kiểm tra khóa sổ với giao dịch cũ
         reconciliationService.assertNotLocked(oldTx.getFund().getId(), oldTx.getTransaction_date());
         // Kiểm tra khóa sổ với dữ liệu mới (nếu có đổi ngày hoặc đổi quỹ)

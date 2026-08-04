@@ -11,6 +11,7 @@ public interface AuthService {
      User createAmin(String username, String password, String fullName, String email);
      UserResponseDTO checkLogin(String username, String password);
      boolean deleteUser(Long id);
+     UserResponseDTO getCurrentUserProfile(String username);
      void updateUser(Long id, User user);
 
      /**
