@@ -57,15 +57,17 @@ public class PdfExportServiceImpl implements PdfExportService {
             documentCodes = transaction.getOriginalDocuments();
         }
         context.setVariable("documentCodes", documentCodes);
-
         String debitAccount = "";
         String creditAccount = "";
 
         if (transaction.getType() != null) {
-            String fundAccount = transaction.getFund() != null && transaction.getFund().getAccountCode() != null 
-                ? transaction.getFund().getAccountCode() : "";
-            String categoryAccount = transaction.getCategories() != null && transaction.getCategories().getAccountCode() != null 
-                ? transaction.getCategories().getAccountCode() : "";
+            String fundAccount = transaction.getFund() != null && transaction.getFund().getAccountCode() != null
+                    ? transaction.getFund().getAccountCode()
+                    : "";
+            String categoryAccount = transaction.getCategories() != null
+                    && transaction.getCategories().getAccountCode() != null
+                            ? transaction.getCategories().getAccountCode()
+                            : "";
 
             if (transaction.getType().toUpperCase().contains("INCOME")) {
                 debitAccount = fundAccount;
@@ -75,13 +77,13 @@ public class PdfExportServiceImpl implements PdfExportService {
                 creditAccount = fundAccount;
             }
         }
-        
+
         context.setVariable("debitAccount", debitAccount);
         context.setVariable("creditAccount", creditAccount);
 
         String htmlContent = templateEngine.process("PrintTransaction", context);
 
-        // ✅ FIX: Dùng Jsoup parse HTML bình thường → convert sang XHTML hợp lệ
+        // Dùng Jsoup parse HTML bình thường → convert sang XHTML hợp lệ
         // Jsoup tự xử lý escape & và các ký tự đặc biệt khác
         Document jsoupDoc = Jsoup.parse(htmlContent);
         jsoupDoc.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
@@ -90,8 +92,10 @@ public class PdfExportServiceImpl implements PdfExportService {
         String baseUri = "";
         try {
             java.net.URL resource = PdfExportServiceImpl.class.getResource("/");
-            if (resource != null) baseUri = resource.toExternalForm();
-        } catch (Exception ignored) {}
+            if (resource != null)
+                baseUri = resource.toExternalForm();
+        } catch (Exception ignored) {
+        }
 
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             PdfRendererBuilder builder = new PdfRendererBuilder();

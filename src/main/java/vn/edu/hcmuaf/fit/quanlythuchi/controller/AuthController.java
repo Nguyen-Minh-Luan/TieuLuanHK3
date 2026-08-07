@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import java.util.Map;
+
 import vn.edu.hcmuaf.fit.quanlythuchi.config.ApiResponse;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.PagedResponseDTO;
 import vn.edu.hcmuaf.fit.quanlythuchi.dto.UserResponseDTO;
@@ -36,6 +38,22 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout() {
         return ApiResponse.ok(null, "Đăng xuất thành công");
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(@RequestBody Map<String, String> body) {
+        authService.forgotPassword(body.get("email"));
+        return ApiResponse.ok(null, "Nếu email tồn tại trong hệ thống, chúng tôi đã gửi hướng dẫn khôi phục.");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<String>> resetPassword(@RequestBody Map<String, String> body) {
+        try {
+            String newPassword = authService.resetPassword(body.get("token"));
+            return ApiResponse.ok(newPassword, "Mật khẩu mới đã được tạo");
+        } catch (RuntimeException e) {
+            return ApiResponse.error(e.getMessage(), "RESET_FAILED");
+        }
     }
 
     @DeleteMapping("/user/{id}")

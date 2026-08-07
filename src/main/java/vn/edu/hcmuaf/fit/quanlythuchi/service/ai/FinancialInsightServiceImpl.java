@@ -88,7 +88,7 @@ public class FinancialInsightServiceImpl implements FinancialInsightService {
         String endPeriod = format.format(new Date());
         snapshot.setPeriod(startPeriod + " → " + endPeriod);
 
-        // A. Cash Flow
+        // Cash Flow
         List<Object[]> cashFlowData = transactionRepository.getMonthlyCashFlowForLastNMonths(monthsBack - 1);
         List<Map<String, Object>> monthlyCashFlow = new ArrayList<>();
         double totalIncome = 0.0;
@@ -111,7 +111,7 @@ public class FinancialInsightServiceImpl implements FinancialInsightService {
         }
         snapshot.setMonthlyCashFlow(monthlyCashFlow);
 
-        // B. Summary
+        // Summary
         Map<String, Double> summary = new HashMap<>();
         summary.put("totalIncome", totalIncome);
         summary.put("totalExpense", totalExpense);
@@ -119,13 +119,14 @@ public class FinancialInsightServiceImpl implements FinancialInsightService {
         snapshot.setSummary(summary);
 
         // C. Category Spikes
-        List<Object[]> categoryData = transactionRepository.getMonthlyTotalExpenseAllCategoriesForLastNMonths(monthsBack - 1);
-        
+        List<Object[]> categoryData = transactionRepository
+                .getMonthlyTotalExpenseAllCategoriesForLastNMonths(monthsBack - 1);
+
         // Nhóm dữ liệu theo CategoryID
         // Map<CategoryId, Map<MonthKey, Total>>
         Map<Long, String> categoryNames = new HashMap<>();
         Map<Long, Map<String, Double>> categoryTotals = new HashMap<>();
-        
+
         for (Object[] row : categoryData) {
             Long catId = ((Number) row[0]).longValue();
             String catName = (String) row[1];
@@ -134,7 +135,8 @@ public class FinancialInsightServiceImpl implements FinancialInsightService {
             double total = row[4] != null ? ((Number) row[4]).doubleValue() : 0.0;
 
             categoryNames.put(catId, catName);
-            categoryTotals.computeIfAbsent(catId, k -> new HashMap<>()).put(String.format("%04d-%02d", year, month), total);
+            categoryTotals.computeIfAbsent(catId, k -> new HashMap<>()).put(String.format("%04d-%02d", year, month),
+                    total);
         }
 
         String currentMonthKey = String.format("%04d-%02d", LocalDate.now().getYear(), LocalDate.now().getMonthValue());
@@ -173,21 +175,22 @@ public class FinancialInsightServiceImpl implements FinancialInsightService {
         snapshot.setCategorySpikes(spikes);
 
         // D. Debt Alerts
-        List<Debt> pendingDebts = debtRepository.findTop5ByDebtTypeAndIsPaidFalseAndIsDeletedFalseAndDueDateNotNullOrderByDueDateAsc("PAYABLE");
+        List<Debt> pendingDebts = debtRepository
+                .findTop5ByDebtTypeAndIsPaidFalseAndIsDeletedFalseAndDueDateNotNullOrderByDueDateAsc("PAYABLE");
         LocalDate today = LocalDate.now();
         List<DebtAlertDTO> alerts = new ArrayList<>();
-        
+
         for (Debt debt : pendingDebts) {
             LocalDate dueDate = debt.getDueDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
             long daysUntilDue = ChronoUnit.DAYS.between(today, dueDate);
-            
+
             // Cảnh báo nếu nợ còn dưới 7 ngày hoặc quá hạn
             if (daysUntilDue <= 7) {
                 alerts.add(DebtAlertDTO.builder()
                         .partner(debt.getPartner() != null ? debt.getPartner().getName() : "Unknown")
                         .type(debt.getDebtType())
-                        .remaining((debt.getTotalAmount() != null ? debt.getTotalAmount() : 0.0) 
-                                 - (debt.getPaidAmount() != null ? debt.getPaidAmount() : 0.0))
+                        .remaining((debt.getTotalAmount() != null ? debt.getTotalAmount() : 0.0)
+                                - (debt.getPaidAmount() != null ? debt.getPaidAmount() : 0.0))
                         .daysUntilDue(daysUntilDue)
                         .build());
             }
@@ -201,19 +204,19 @@ public class FinancialInsightServiceImpl implements FinancialInsightService {
         AIInsightResponseDTO response = new AIInsightResponseDTO();
         response.setStatus("DEGRADED");
         response.setCashFlowStatus("WARNING");
-        response.setCashFlowNarrative("Hệ thống AI đang bảo trì. Chức năng phân tích xu hướng tạm thời sử dụng thuật toán cơ bản.");
+        response.setCashFlowNarrative(
+                "Hệ thống AI đang bảo trì. Chức năng phân tích xu hướng tạm thời sử dụng thuật toán cơ bản.");
         response.setRecommendations(List.of(
-            "Vui lòng theo dõi sát các khoản nợ sắp đến hạn.",
-            "Hãy kiểm tra lại ngân sách cho các danh mục có chi tiêu tăng cao."
-        ));
-        
+                "Vui lòng theo dõi sát các khoản nợ sắp đến hạn.",
+                "Hãy kiểm tra lại ngân sách cho các danh mục có chi tiêu tăng cao."));
+
         AIInsightResponseDTO.LiquidityRisk risk = new AIInsightResponseDTO.LiquidityRisk();
         risk.setHasRisk(false);
         risk.setMessage("");
         response.setLiquidityRisk(risk);
-        
+
         response.setSpendingSpikes(new ArrayList<>());
-        
+
         return response;
     }
 }

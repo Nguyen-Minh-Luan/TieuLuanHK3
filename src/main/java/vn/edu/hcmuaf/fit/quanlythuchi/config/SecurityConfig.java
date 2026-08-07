@@ -30,7 +30,7 @@ public class SecurityConfig {
         }))
         .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/login").permitAll()
+                        .requestMatchers("/auth/login", "/auth/forgot-password", "/auth/reset-password").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/logout").authenticated()
                         .requestMatchers(HttpMethod.POST, "/auth/user").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/auth/user/*").hasAuthority("ROLE_ADMIN")
@@ -75,7 +75,9 @@ public class SecurityConfig {
                                 .hasAnyAuthority("ROLE_ADMIN", "ROLE_THUQUY", "ROLE_TONGHOP")
 
                         // ── Báo cáo (Report) ──
-                        // Tất cả method: chỉ Admin và Kế toán Tổng hợp
+                        // Tính năng AI Insights cho tất cả kế toán, thủ quỹ, tổng hợp, admin
+                        .requestMatchers(HttpMethod.GET, "/reports/ai-insights").hasAnyAuthority("ROLE_ADMIN", "ROLE_TONGHOP", "ROLE_KETOAN", "ROLE_THUQUY")
+                        // Tất cả method còn lại của báo cáo: chỉ Admin và Kế toán Tổng hợp
                         .requestMatchers("/reports", "/reports/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_TONGHOP")
 
                         .anyRequest().authenticated())

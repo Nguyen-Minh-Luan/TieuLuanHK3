@@ -25,4 +25,7 @@ public interface AuthService {
       */
      Page<UserResponseDTO> getAllUsers(String keyword, Integer role, String status,
                                       int page, int size, String sortBy, String sortDir);
+
+     void forgotPassword(String email);
+     String resetPassword(String token);
 }

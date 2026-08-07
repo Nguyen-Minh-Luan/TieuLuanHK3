@@ -29,4 +29,10 @@ public class User {
     private Date created_at;
     private Date update_at;
     private String token;
+
+    @Column(name = "reset_token")
+    private String resetToken;
+    
+    @Column(name = "reset_token_expiry")
+    private Date resetTokenExpiry;
 }

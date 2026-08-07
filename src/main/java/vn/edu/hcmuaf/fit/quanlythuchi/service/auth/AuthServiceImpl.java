@@ -15,12 +15,16 @@ import vn.edu.hcmuaf.fit.quanlythuchi.repository.AuthRepository;
 
 import java.util.Date;
 import java.util.Optional;
+import java.util.UUID;
+import vn.edu.hcmuaf.fit.quanlythuchi.service.notification.EmailService;
+import vn.edu.hcmuaf.fit.quanlythuchi.util.PasswordGenerator;
 
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService{
     private final AuthRepository authRepo;
     private final JwtUtil jwt;
+    private final EmailService emailService;
     private BCryptPasswordEncoder hashMachine = new BCryptPasswordEncoder();
 
     @Override
@@ -139,6 +143,54 @@ public class AuthServiceImpl implements AuthService{
         Pageable pageable = PageRequest.of(Math.max(0, page - 1), size, sort);
         return authRepo.searchUsers(keyword, role, status, pageable)
                        .map(this::toUserResponseDTO);
+    }
+
+    @Override
+    @Transactional
+    public void forgotPassword(String email) {
+        Optional<User> optionalUser = authRepo.findByEmail(email);
+        if (optionalUser.isEmpty()) {
+            return; // Don't reveal if email exists or not
+        }
+        User u = optionalUser.get();
+        
+        // Basic rate limit: if token exists and expiry is in the future, don't resend
+        if (u.getResetToken() != null && u.getResetTokenExpiry() != null && u.getResetTokenExpiry().after(new Date())) {
+            return; 
+        }
+
+        String token = UUID.randomUUID().toString();
+        u.setResetToken(token);
+        u.setResetTokenExpiry(new Date(System.currentTimeMillis() + 15 * 60 * 1000)); // 15 mins
+        authRepo.save(u);
+
+        String resetLink = "http://localhost:5173/reset-password?token=" + token;
+        String emailBody = "<p>Bạn đã yêu cầu khôi phục mật khẩu. Vui lòng bấm vào liên kết dưới đây để nhận mật khẩu mới:</p>" +
+                           "<p><a href=\"" + resetLink + "\">Khôi phục mật khẩu</a></p>" +
+                           "<p>Liên kết này có hiệu lực trong 15 phút và chỉ được sử dụng 1 lần.</p>";
+        emailService.send(email, "[Hệ Thống Sổ Quỹ] Yêu cầu khôi phục mật khẩu", emailBody);
+    }
+
+    @Override
+    @Transactional
+    public String resetPassword(String token) {
+        User u = authRepo.findByResetToken(token)
+                .orElseThrow(() -> new RuntimeException("Link không hợp lệ hoặc đã được sử dụng"));
+
+        if (u.getResetTokenExpiry() == null || u.getResetTokenExpiry().before(new Date())) {
+            u.setResetToken(null);
+            u.setResetTokenExpiry(null);
+            authRepo.save(u);
+            throw new RuntimeException("Link đã hết hạn. Vui lòng yêu cầu lại.");
+        }
+
+        String newPassword = PasswordGenerator.generateRandomPassword(12);
+        u.setPassword(hashMachine.encode(newPassword));
+        u.setResetToken(null);
+        u.setResetTokenExpiry(null);
+        authRepo.save(u);
+
+        return newPassword;
     }
 
     /** Helper mapper: User entity → UserResponseDTO (dùng cho danh sách admin) */

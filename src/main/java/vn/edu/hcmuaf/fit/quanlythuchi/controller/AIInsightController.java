@@ -19,7 +19,7 @@ public class AIInsightController {
     private final FinancialInsightService financialInsightService;
 
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_TONGHOP')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_TONGHOP','ROLE_KETOAN','ROLE_THUQUY')")
     public ResponseEntity<ApiResponse<AIInsightResponseDTO>> getAIInsights(
             @RequestParam(value = "months", defaultValue = "6") int months,
             @RequestParam(value = "forceRefresh", required = false, defaultValue = "false") boolean forceRefresh) {

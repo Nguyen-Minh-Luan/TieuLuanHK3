@@ -87,6 +87,7 @@ public class GeminiClient {
      * đúng kiểu dữ liệu, tránh trường hợp field bị thiếu/null khi map
      * sang DTO (ví dụ cashFlowNarrative, cashFlowStatus bị rớt mất).
      */
+
     private Map<String, Object> buildAIInsightResponseSchema() {
         Map<String, Object> spendingSpikeSchema = new HashMap<>();
         spendingSpikeSchema.put("type", "OBJECT");

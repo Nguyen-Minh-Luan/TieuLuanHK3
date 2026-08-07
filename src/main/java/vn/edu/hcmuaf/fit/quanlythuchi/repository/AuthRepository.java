@@ -13,6 +13,9 @@ import java.util.Optional;
 @Repository
 public interface AuthRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String username);
+    Optional<User> findByEmail(String email);
+    Optional<User> findByResetToken(String resetToken);
+
 
     /** Tìm kiếm người dùng có phân trang, hỗ trợ keyword, lọc theo role và status */
     @Query("SELECT u FROM User u " +
