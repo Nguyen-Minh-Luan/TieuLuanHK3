@@ -1,0 +1,35 @@
+spring.datasource.url=jdbc:mysql://localhost:3306/quanlythuchi
+spring.datasource.username=[ĐIỀN USERNAME]
+spring.datasource.password=[ĐIỀN PASSWORD]
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.jpa.hibernate.ddl-auto=update
+jwt.secret=[ĐIỀN SECRET KEY VÀO ĐÂY]
+jwt.expiration=86400000
+
+# Thông tin đơn vị in trên phiếu
+voucher.company.name=Cong Ty Giai Phap Toan Cau Doanh Nghiep GESO
+voucher.company.address=GESO Office, 62. Nguyen Thang Hien, Hanh Thang, Ho Chi Minh 700000
+# Cau hinh SMTP gui email canh bao
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=[ĐIỀN GMAIL VÀO ĐÂY]
+spring.mail.password=[ĐIỀN PASSWORD VÀO ĐÂY]
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+
+# Bat/tat va cau hinh thong bao rui ro
+app.notification.enabled=true
+app.notification.admin-emails=[ĐIỀN MAIL CỦA BẠN VÀO ĐÂY NẾU MUỐN TEST CHỨC NĂNG THÔNG BÁO MAIL]
+app.notification.spending-warning.enabled=true
+# Cache
+spring.cache.type=simple
+
+# Gemini API
+gemini.api.key=[ĐIỀN API KEY VÀO ĐÂY]
+gemini.api.url=https://generativelanguage.googleapis.com/v1beta/models
+gemini.model=gemini-3.1-flash-lite
+gemini.max-output-tokens=2048
+gemini.temperature=0.3
+insight.history-months-max=6
+insight.spike-threshold-warning=0.20
+insight.spike-threshold-critical=0.50
