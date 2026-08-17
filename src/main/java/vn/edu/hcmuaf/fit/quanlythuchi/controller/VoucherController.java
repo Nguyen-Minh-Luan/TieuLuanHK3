@@ -92,4 +92,25 @@ public class VoucherController {
                                 .headers(headers)
                                 .body(pdfBytes);
         }
+
+        @GetMapping("/reports/{id}/preview")
+        public ResponseEntity<byte[]> previewReportPdf(@PathVariable Long id) {
+                Report report = reportRepository.findByIdAndIsDeletedFalse(id)
+                                .orElseThrow(() -> new RuntimeException("Không tìm thấy báo cáo với ID: " + id));
+
+                byte[] pdfBytes = pdfReportExportService.generateReportPdf(id);
+
+                String filename = "bao-cao-tai-chinh-" + report.getId() + ".pdf";
+
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_PDF);
+                headers.setContentDisposition(ContentDisposition.inline()
+                                .filename(filename, StandardCharsets.UTF_8)
+                                .build());
+                headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+
+                return ResponseEntity.ok()
+                                .headers(headers)
+                                .body(pdfBytes);
+        }
 }
