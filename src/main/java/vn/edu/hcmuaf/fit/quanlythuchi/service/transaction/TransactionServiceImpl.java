@@ -361,9 +361,12 @@ public class TransactionServiceImpl implements TransactionService {
         // 5. Hoàn tác paidAmount trên Debt (nếu phiếu này có liên kết khoản nợ)
         if (tx.getDebt() != null) {
             Debt debt = tx.getDebt();
-            double newPaid = (debt.getPaidAmount() != null ? debt.getPaidAmount() : 0.0) - tx.getAmount();
+            // Làm tròn về VND nguyên — đối xứng với Math.round trong applyPayment()
+            // để tránh tích lũy sai số floating-point khi hủy nhiều phiếu liên tiếp.
+            double currentPaid = debt.getPaidAmount() != null ? debt.getPaidAmount() : 0.0;
+            double newPaid = Math.round(currentPaid - tx.getAmount());
             debt.setPaidAmount(Math.max(newPaid, 0.0));
-            // Nếu đã đánh dấu isPaid thì reset lại
+            // Reset trạng thái isPaid — khi hủy phiếu thanh toán, nợ quay về chưa xong
             debt.setIsPaid(false);
             debt.setPaymentDate(null);
             debt.setUpdatedAt(new Date());

@@ -57,4 +57,23 @@ public interface DebtService {
      * @return Debt entity đã cập nhật
      */
     Debt applyPayment(Long debtId, Double amount);
+
+    /**
+     * Xác nhận tất toán thủ công cho khoản nợ.
+     * Chỉ cho phép khi remainingAmount <= ngưỡng cấu hình (mặc định 1đ).
+     * Dùng để kế toán viên chốt tay khi hệ thống không tự chốt được.
+     *
+     * @param id ID khoản nợ cần xác nhận tất toán
+     * @return DebtResponse sau khi cập nhật
+     */
+    DebtResponse markAsPaid(Long id);
+
+    /**
+     * Backfill một lần: quét toàn bộ khoản nợ bị "kẹt"
+     * (isPaid=false nhưng totalAmount - paidAmount <= ngưỡng epsilon)
+     * và tự động cập nhật isPaid=true.
+     *
+     * @return Số lượng bản ghi đã được cập nhật
+     */
+    int backfillPaidStatus();
 }

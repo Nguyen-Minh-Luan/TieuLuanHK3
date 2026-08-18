@@ -16,6 +16,7 @@ import vn.edu.hcmuaf.fit.quanlythuchi.entity.User;
 import vn.edu.hcmuaf.fit.quanlythuchi.repository.ReportRepository;
 import vn.edu.hcmuaf.fit.quanlythuchi.repository.UserRepository;
 import vn.edu.hcmuaf.fit.quanlythuchi.repository.FundRepository;
+import vn.edu.hcmuaf.fit.quanlythuchi.repository.TransactionRepository;
 import vn.edu.hcmuaf.fit.quanlythuchi.service.transaction.TransactionService;
 
 import java.util.Calendar;
@@ -30,6 +31,7 @@ public class ReportServiceImpl implements ReportService {
     private final ReportRepository reportRepository;
     private final UserRepository userRepository;
     private final FundRepository fundRepository;
+    private final TransactionRepository transactionRepository;
     private final TransactionService transactionService;
 
     // ──────────────────────────────────────────────────────────────
@@ -203,11 +205,6 @@ public class ReportServiceImpl implements ReportService {
     // ──────────────────────────────────────────────────────────────
 
     /**
-     * Tính toán các chỉ tiêu bảng cân đối kế toán (mã 110–500)
-     * và ghi thẳng vào các field của Report entity để chuẩn bị save xuống DB.
-     * Phương thức này dùng chung cho createReport(), updateReport(), recalculate().
-     */
-    /**
      * Tính ngày 31/12 của năm trước fromDate (làm mốc "boyEnd" để query số đầu năm).
      * Ví dụ: fromDate = 01/03/2025 → boyEnd = 31/12/2024
      */
@@ -229,17 +226,23 @@ public class ReportServiceImpl implements ReportService {
      * Phương thức này dùng chung cho createReport(), updateReport(), recalculate().
      */
     private void applyBalanceSheet(Report report) {
-        // ── Số cuối năm (End of Period) ──────────────────────────────
+        // ── Số cuối năm (End of Period) ────────────────────────────────────────────
+        // Tiền và tương đương tiền cuối năm: tổng số dư khả dụng hiện tại của các Quỹ
         Double cash           = safeDouble(fundRepository.getTotalFundBalance().orElse(0.0));
+        // Vốn chủ sở hữu: tổng vốn ban đầu (initialBalance) của các Quỹ
         Double initialCapital = safeDouble(reportRepository.getTotalInitialCapital());
         Double receivable     = 0.0;
         Double payable        = 0.0;
         Double taxExp         = 0.0;
 
+        if (report.getToDate() != null) {
+            // Nợ phải thu/trả: lũy kế từ đầu đến cuối kỳ, dùng Transaction ledger để phản ánh
+            // đúng trạng thái tại asOfDate (không phụ thuộc vào isPaid/paidAmount hiện tại)
+            receivable = sumReceivableAsOf(report.getToDate());
+            payable    = sumPayableAsOf(report.getToDate());
+        }
         if (report.getFromDate() != null && report.getToDate() != null) {
-            receivable = safeDouble(reportRepository.sumReceivableByDateRange(report.getFromDate(), report.getToDate()));
-            payable    = safeDouble(reportRepository.sumPayableByDateRange(report.getFromDate(), report.getToDate()));
-            taxExp     = safeDouble(reportRepository.sumTaxExpenseByDateRange(report.getFromDate(), report.getToDate()));
+            taxExp = safeDouble(reportRepository.sumTaxExpenseByDateRange(report.getFromDate(), report.getToDate()));
         }
 
         Double totalAssets      = cash + receivable;
@@ -257,15 +260,16 @@ public class ReportServiceImpl implements ReportService {
         report.setTotalEquity(totalEquity);
         report.setTotalLiabilitiesAndEquity(totalLiabAndEq);
 
-        // ── Số đầu năm (Beginning of Year) ──────────────────────────
+        // ── Số đầu năm (Beginning of Year) ──────────────────────────────────────────
         if (report.getFromDate() != null) {
             Date boyEnd = getBeginningOfYearEnd(report.getFromDate());
 
-            Double cashBoy       = safeDouble(fundRepository.getTotalFundBalance().orElse(0.0));
-            // Ghi chú: Fund không lưu snapshot lịch sử → dùng initialBalance làm vốn đầu năm
-            Double initialCapBoy = safeDouble(reportRepository.getTotalInitialCapital());
-            Double receivableBoy = safeDouble(reportRepository.sumReceivableUpTo(boyEnd));
-            Double payableBoy    = safeDouble(reportRepository.sumPayableUpTo(boyEnd));
+            // Tiền đầu năm: dùng tổng vốn (initialBalance) vì Fund không lưu snapshot lịch sử
+            Double cashBoy       = initialCapital;
+            Double initialCapBoy = initialCapital;
+            // Nợ đầu năm: cùng công thức ledger nhưng mốc thời gian là boyEnd (31/12 năm trước)
+            Double receivableBoy = sumReceivableAsOf(boyEnd);
+            Double payableBoy    = sumPayableAsOf(boyEnd);
             Double taxBoy        = safeDouble(reportRepository.sumTaxExpenseUpTo(boyEnd));
 
             Double totalAssetsBoy      = cashBoy + receivableBoy;
@@ -283,6 +287,28 @@ public class ReportServiceImpl implements ReportService {
             report.setTotalEquityBoy(totalEquityBoy);
             report.setTotalLiabilitiesAndEquityBoy(totalLiabAndEqBoy);
         }
+    }
+
+    /**
+     * Tính số dư nợ phải thu tại thời điểm asOfDate dựa trên sổ giao dịch (Transaction ledger).
+     * Công thức: SUM(debtTotalAmount khởi phát tới asOfDate) − SUM(số tiền đã thanh toán tới asOfDate).
+     * Không phụ thuộc vào isPaid/paidAmount hiện tại — cho kết quả ổn định khi recalculate bất kỳ lúc nào.
+     */
+    private Double sumReceivableAsOf(Date asOfDate) {
+        Double total = safeDouble(reportRepository.sumReceivableTotalUpTo(asOfDate));
+        Double paid  = safeDouble(transactionRepository.sumReceivablePaidUpTo(asOfDate));
+        return total - paid;
+    }
+
+    /**
+     * Tính số dư nợ phải trả tại thời điểm asOfDate dựa trên sổ giao dịch (Transaction ledger).
+     * Công thức: SUM(debtTotalAmount khởi phát tới asOfDate) − SUM(số tiền đã thanh toán tới asOfDate).
+     * Không phụ thuộc vào isPaid/paidAmount hiện tại — cho kết quả ổn định khi recalculate bất kỳ lúc nào.
+     */
+    private Double sumPayableAsOf(Date asOfDate) {
+        Double total = safeDouble(reportRepository.sumPayableTotalUpTo(asOfDate));
+        Double paid  = safeDouble(transactionRepository.sumPayablePaidUpTo(asOfDate));
+        return total - paid;
     }
 
     private Report findActiveReport(Long id) {

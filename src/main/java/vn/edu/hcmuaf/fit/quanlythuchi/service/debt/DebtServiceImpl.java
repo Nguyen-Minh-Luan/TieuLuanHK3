@@ -225,6 +225,15 @@ public class DebtServiceImpl implements DebtService {
     // ──────────────────────────────────────────────────────────────
     //  APPLY PAYMENT — gọi từ TransactionServiceImpl
     // ──────────────────────────────────────────────────────────────
+
+    /**
+     * Ngưỡng sai số cho phép khi so sánh tiền VND (đơn vị nguyên).
+     * Double không biểu diễn chính xác nhiều số thập phân, nên sau nhiều lần cộng
+     * dồn có thể lệch tối đa vài đơn vị cuối (ví dụ 4999999.9999999). Ngưỡng 1.0
+     * tức là: nếu còn lại dưới 1đ thì coi như đã trả xong.
+     */
+    private static final double PAYMENT_EPSILON = 1.0;
+
     @Override
     @Transactional
     public Debt applyPayment(Long debtId, Double amount) {
@@ -239,19 +248,83 @@ public class DebtServiceImpl implements DebtService {
             throw new IllegalArgumentException("Số tiền thanh toán phải lớn hơn 0");
         }
 
-        // Cộng dồn số tiền đã trả
-        double newPaidAmount = (debt.getPaidAmount() != null ? debt.getPaidAmount() : 0.0) + amount;
+        // Cộng dồn số tiền đã trả, làm tròn về đơn vị VND nguyên để tránh tích lũy
+        // sai số floating-point qua nhiều lần cộng dồn.
+        double currentPaid = debt.getPaidAmount() != null ? debt.getPaidAmount() : 0.0;
+        double newPaidAmount = Math.round(currentPaid + amount);
         debt.setPaidAmount(newPaidAmount);
 
-        // Kiểm tra đã trả đủ chưa
-        if (newPaidAmount >= debt.getTotalAmount()) {
+        // So sánh có ngưỡng epsilon: nếu số tiền còn lại <= 1đ thì coi như đã trả đủ.
+        // Tránh trường hợp khoản nợ bị "kẹt" vĩnh viễn do lệch nhỏ sau nhiều đợt thanh toán.
+        double totalAmount = debt.getTotalAmount() != null ? debt.getTotalAmount() : 0.0;
+        double remaining = totalAmount - newPaidAmount;
+        if (remaining <= PAYMENT_EPSILON) {
             debt.setIsPaid(true);
             debt.setPaymentDate(new Date()); // Ghi nhận ngày thanh toán xong
-            System.out.println("INFO: Khoản nợ ID " + debtId + " đã được thanh toán xong.");
+            System.out.println("INFO: Khoản nợ ID " + debtId + " đã được thanh toán xong" +
+                    (remaining > 0 ? " (còn lệch " + remaining + " đ do sai số làm tròn, đã xử lý tự động)." : "."));
         }
 
         debt.setUpdatedAt(new Date());
         return debtRepository.save(debt);
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //  XÁC NHẬN TẤT TOÁN THỦ CÔNG
+    // ──────────────────────────────────────────────────────────────
+    @Override
+    @Transactional
+    public DebtResponse markAsPaid(Long id) {
+        Debt debt = findActiveDebt(id);
+
+        if (Boolean.TRUE.equals(debt.getIsPaid())) {
+            throw new RuntimeException("Khoản nợ ID " + id + " đã được đánh dấu thanh toán xong trước đó.");
+        }
+
+        double totalAmount = debt.getTotalAmount() != null ? debt.getTotalAmount() : 0.0;
+        double paidAmount  = debt.getPaidAmount()  != null ? debt.getPaidAmount()  : 0.0;
+        double remaining   = Math.round(totalAmount - paidAmount);
+
+        // Chỉ cho phép xác nhận thủ công khi còn lại rất nhỏ (≤ ngưỡng cấu hình).
+        // Ngăn lạm dụng để "xóa nợ" khi vẫn còn thiếu đáng kể.
+        if (remaining > PAYMENT_EPSILON) {
+            throw new RuntimeException(
+                    "Không thể xác nhận tất toán: khoản nợ ID " + id +
+                    " vẫn còn " + remaining + " đ chưa thanh toán. " +
+                    "Xác nhận thủ công chỉ dành cho sai lệch tối đa " + (long) PAYMENT_EPSILON + " đ.");
+        }
+
+        debt.setIsPaid(true);
+        debt.setPaymentDate(new Date());
+        debt.setUpdatedAt(new Date());
+        System.out.println("INFO: Khoản nợ ID " + id + " đã được xác nhận tất toán thủ công bởi người dùng.");
+        return toResponse(debtRepository.save(debt));
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //  BACKFILL: SỬA CÁC KHOẢN NỢ BỊ KẸT TRONG DB
+    // ──────────────────────────────────────────────────────────────
+    @Override
+    @Transactional
+    public int backfillPaidStatus() {
+        List<Debt> stuckDebts = debtRepository.findByIsPaidFalseAndIsDeletedFalse();
+        int count = 0;
+        for (Debt debt : stuckDebts) {
+            double totalAmount = debt.getTotalAmount() != null ? debt.getTotalAmount() : 0.0;
+            double paidAmount  = debt.getPaidAmount()  != null ? debt.getPaidAmount()  : 0.0;
+            double remaining   = Math.round(totalAmount - paidAmount);
+            if (remaining <= PAYMENT_EPSILON) {
+                debt.setIsPaid(true);
+                debt.setPaymentDate(new Date());
+                debt.setUpdatedAt(new Date());
+                debtRepository.save(debt);
+                count++;
+                System.out.println("BACKFILL: Khoản nợ ID " + debt.getId() +
+                        " đã được cập nhật isPaid=true (còn lại: " + remaining + " đ).");
+            }
+        }
+        System.out.println("BACKFILL HOÀN TẤT: đã cập nhật " + count + " khoản nợ.");
+        return count;
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -311,8 +384,11 @@ public class DebtServiceImpl implements DebtService {
 
     /** Map Debt entity → DebtResponse (nguồn sự thật duy nhất cho output) */
     private DebtResponse toResponse(Debt debt) {
-        double remaining = (debt.getTotalAmount() != null ? debt.getTotalAmount() : 0.0)
-                         - (debt.getPaidAmount()   != null ? debt.getPaidAmount()   : 0.0);
+        // Làm tròn remainingAmount về số nguyên VND để tránh hiển thị số dư âm cực nhỏ
+        // (ví dụ -0.0000001) do sai số floating-point — đảm bảo khớp với logic epsilon trong applyPayment.
+        double rawRemaining = (debt.getTotalAmount() != null ? debt.getTotalAmount() : 0.0)
+                            - (debt.getPaidAmount()   != null ? debt.getPaidAmount()   : 0.0);
+        double remaining = Math.max(0.0, Math.round(rawRemaining));
         return DebtResponse.builder()
                 .id(debt.getId())
                 .debtDate(debt.getDebtDate())

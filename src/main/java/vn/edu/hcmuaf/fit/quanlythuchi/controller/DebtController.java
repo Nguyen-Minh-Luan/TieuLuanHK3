@@ -92,4 +92,26 @@ public class DebtController {
     public ResponseEntity<ApiResponse<Map<String, Double>>> getDebtSummary() {
         return ApiResponse.ok(debtService.getDebtSummary());
     }
+
+    /**
+     * PATCH /debts/{id}/mark-paid — Xác nhận tất toán thủ công.
+     * Chỉ cho phép khi còn lại <= 1đ (epsilon). Dùng khi hệ thống không tự chốt
+     * được do sai số floating-point hoặc kế toán viên muốn chốt tay.
+     */
+    @PatchMapping("/{id}/mark-paid")
+    public ResponseEntity<ApiResponse<DebtResponse>> markAsPaid(@PathVariable Long id) {
+        return ApiResponse.ok(debtService.markAsPaid(id), "Xác nhận tất toán khoản nợ thành công");
+    }
+
+    /**
+     * POST /debts/admin/backfill-paid — Backfill một lần để sửa các khoản nợ bị kẹt.
+     * Quét tất cả khoản nợ isPaid=false nhưng còn lại <= 1đ và đánh dấu isPaid=true.
+     * CHỈ dùng trong giai đoạn migration — không expose ra ngoài sau khi đã chạy xong.
+     */
+    @PostMapping("/admin/backfill-paid")
+    public ResponseEntity<ApiResponse<Map<String, Integer>>> backfillPaidStatus() {
+        int updated = debtService.backfillPaidStatus();
+        return ApiResponse.ok(Map.of("updatedCount", updated),
+                "Backfill hoàn tất: đã cập nhật " + updated + " khoản nợ sang isPaid=true");
+    }
 }

@@ -69,17 +69,45 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
             @Param("fromDate") Date fromDate,
             @Param("toDate") Date toDate);
 
-    // Tổng nợ phải thu còn lại trong kỳ (RECEIVABLE chưa thanh toán xong)
+    /**
+     * @deprecated Chỉ lấy nợ phát sinh trong khoảng fromDate–toDate và lọc theo isPaid hiện tại
+     *             → bỏ sót nợ phát sinh trước fromDate. Dùng {@link #sumReceivableTotalUpTo} thay thế.
+     */
+    @Deprecated
     @Query("SELECT COALESCE(SUM(d.totalAmount - d.paidAmount), 0.0) FROM Debt d " +
            "WHERE d.debtType = 'RECEIVABLE' AND d.isPaid = false AND d.isDeleted = false " +
            "AND d.debtDate BETWEEN :fromDate AND :toDate")
     Double sumReceivableByDateRange(@Param("fromDate") Date fromDate, @Param("toDate") Date toDate);
 
-    // Tổng nợ phải trả còn lại trong kỳ (PAYABLE chưa thanh toán xong)
+    /**
+     * @deprecated Chỉ lấy nợ phát sinh trong khoảng fromDate–toDate và lọc theo isPaid hiện tại
+     *             → bỏ sót nợ phát sinh trước fromDate. Dùng {@link #sumPayableTotalUpTo} thay thế.
+     */
+    @Deprecated
     @Query("SELECT COALESCE(SUM(d.totalAmount - d.paidAmount), 0.0) FROM Debt d " +
            "WHERE d.debtType = 'PAYABLE' AND d.isPaid = false AND d.isDeleted = false " +
            "AND d.debtDate BETWEEN :fromDate AND :toDate")
     Double sumPayableByDateRange(@Param("fromDate") Date fromDate, @Param("toDate") Date toDate);
+
+    /**
+     * Tổng phát sinh nợ phải thu (RECEIVABLE) tính lũy kế đến asOfDate.
+     * Không lọc theo isPaid — chỉ điều kiện debtDate <= asOfDate.
+     * Dùng kết hợp với {@code TransactionRepository#sumReceivablePaidUpTo} để tính số dư thực tế tại asOfDate.
+     */
+    @Query("SELECT COALESCE(SUM(d.totalAmount), 0.0) FROM Debt d " +
+           "WHERE d.debtType = 'RECEIVABLE' AND d.isDeleted = false " +
+           "AND d.debtDate <= :asOfDate")
+    Double sumReceivableTotalUpTo(@Param("asOfDate") Date asOfDate);
+
+    /**
+     * Tổng phát sinh nợ phải trả (PAYABLE) tính lũy kế đến asOfDate.
+     * Không lọc theo isPaid — chỉ điều kiện debtDate <= asOfDate.
+     * Dùng kết hợp với {@code TransactionRepository#sumPayablePaidUpTo} để tính số dư thực tế tại asOfDate.
+     */
+    @Query("SELECT COALESCE(SUM(d.totalAmount), 0.0) FROM Debt d " +
+           "WHERE d.debtType = 'PAYABLE' AND d.isDeleted = false " +
+           "AND d.debtDate <= :asOfDate")
+    Double sumPayableTotalUpTo(@Param("asOfDate") Date asOfDate);
 
     // Tổng chi phí thuế trong kỳ (giao dịch EXPENSE thuộc hạng mục có tax > 0)
     @Query(value =
@@ -95,13 +123,23 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     @Query("SELECT COALESCE(SUM(f.initialBalance), 0.0) FROM Fund f WHERE f.isDeleted = false")
     Double getTotalInitialCapital();
 
-    // Tổng nợ phải thu tại thời điểm đầu năm
+    /**
+     * @deprecated Lọc theo {@code isPaid = false} và {@code paidAmount} tại thời điểm chạy query —
+     *             không phản ánh đúng trạng thái nợ tại asOfDate trong quá khứ.
+     *             Thay bằng cặp {@link #sumReceivableTotalUpTo} + {@code TransactionRepository#sumReceivablePaidUpTo}.
+     */
+    @Deprecated
     @Query("SELECT COALESCE(SUM(d.totalAmount - d.paidAmount), 0.0) FROM Debt d " +
            "WHERE d.debtType = 'RECEIVABLE' AND d.isPaid = false AND d.isDeleted = false " +
            "AND d.debtDate <= :boyEnd")
     Double sumReceivableUpTo(@Param("boyEnd") Date boyEnd);
 
-    // Tổng nợ phải trả tại thời điểm đầu năm
+    /**
+     * @deprecated Lọc theo {@code isPaid = false} và {@code paidAmount} tại thời điểm chạy query —
+     *             không phản ánh đúng trạng thái nợ tại asOfDate trong quá khứ.
+     *             Thay bằng cặp {@link #sumPayableTotalUpTo} + {@code TransactionRepository#sumPayablePaidUpTo}.
+     */
+    @Deprecated
     @Query("SELECT COALESCE(SUM(d.totalAmount - d.paidAmount), 0.0) FROM Debt d " +
            "WHERE d.debtType = 'PAYABLE' AND d.isPaid = false AND d.isDeleted = false " +
            "AND d.debtDate <= :boyEnd")
