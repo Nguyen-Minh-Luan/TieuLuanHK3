@@ -17,6 +17,7 @@ import vn.edu.hcmuaf.fit.quanlythuchi.repository.ReportRepository;
 import vn.edu.hcmuaf.fit.quanlythuchi.repository.UserRepository;
 import vn.edu.hcmuaf.fit.quanlythuchi.repository.FundRepository;
 import vn.edu.hcmuaf.fit.quanlythuchi.repository.TransactionRepository;
+import vn.edu.hcmuaf.fit.quanlythuchi.repository.DebtRepository;
 import vn.edu.hcmuaf.fit.quanlythuchi.service.transaction.TransactionService;
 
 import java.util.Calendar;
@@ -33,6 +34,7 @@ public class ReportServiceImpl implements ReportService {
     private final FundRepository fundRepository;
     private final TransactionRepository transactionRepository;
     private final TransactionService transactionService;
+    private final DebtRepository debtRepository;
 
     // ──────────────────────────────────────────────────────────────
     //  TẠO BÁO CÁO MỚI
@@ -290,24 +292,22 @@ public class ReportServiceImpl implements ReportService {
     }
 
     /**
-     * Tính số dư nợ phải thu tại thời điểm asOfDate dựa trên sổ giao dịch (Transaction ledger).
-     * Công thức: SUM(debtTotalAmount khởi phát tới asOfDate) − SUM(số tiền đã thanh toán tới asOfDate).
-     * Không phụ thuộc vào isPaid/paidAmount hiện tại — cho kết quả ổn định khi recalculate bất kỳ lúc nào.
+     * Tính số dư nợ phải thu tại thời điểm asOfDate.
+     * Công thức: SUM(debtTotalAmount khởi phát tới asOfDate) − SUM(paidAmount của các khoản nợ khởi phát tới asOfDate).
      */
     private Double sumReceivableAsOf(Date asOfDate) {
         Double total = safeDouble(reportRepository.sumReceivableTotalUpTo(asOfDate));
-        Double paid  = safeDouble(transactionRepository.sumReceivablePaidUpTo(asOfDate));
+        Double paid  = safeDouble(debtRepository.sumReceivablePaidUpTo(asOfDate));
         return total - paid;
     }
 
     /**
-     * Tính số dư nợ phải trả tại thời điểm asOfDate dựa trên sổ giao dịch (Transaction ledger).
-     * Công thức: SUM(debtTotalAmount khởi phát tới asOfDate) − SUM(số tiền đã thanh toán tới asOfDate).
-     * Không phụ thuộc vào isPaid/paidAmount hiện tại — cho kết quả ổn định khi recalculate bất kỳ lúc nào.
+     * Tính số dư nợ phải trả tại thời điểm asOfDate.
+     * Công thức: SUM(debtTotalAmount khởi phát tới asOfDate) − SUM(paidAmount của các khoản nợ khởi phát tới asOfDate).
      */
     private Double sumPayableAsOf(Date asOfDate) {
         Double total = safeDouble(reportRepository.sumPayableTotalUpTo(asOfDate));
-        Double paid  = safeDouble(transactionRepository.sumPayablePaidUpTo(asOfDate));
+        Double paid  = safeDouble(debtRepository.sumPayablePaidUpTo(asOfDate));
         return total - paid;
     }
 

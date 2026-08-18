@@ -92,7 +92,7 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     /**
      * Tổng phát sinh nợ phải thu (RECEIVABLE) tính lũy kế đến asOfDate.
      * Không lọc theo isPaid — chỉ điều kiện debtDate <= asOfDate.
-     * Dùng kết hợp với {@code TransactionRepository#sumReceivablePaidUpTo} để tính số dư thực tế tại asOfDate.
+     * Dùng kết hợp với {@code DebtRepository#sumReceivablePaidUpTo} để tính số dư thực tế tại asOfDate.
      */
     @Query("SELECT COALESCE(SUM(d.totalAmount), 0.0) FROM Debt d " +
            "WHERE d.debtType = 'RECEIVABLE' AND d.isDeleted = false " +
@@ -102,7 +102,7 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     /**
      * Tổng phát sinh nợ phải trả (PAYABLE) tính lũy kế đến asOfDate.
      * Không lọc theo isPaid — chỉ điều kiện debtDate <= asOfDate.
-     * Dùng kết hợp với {@code TransactionRepository#sumPayablePaidUpTo} để tính số dư thực tế tại asOfDate.
+     * Dùng kết hợp với {@code DebtRepository#sumPayablePaidUpTo} để tính số dư thực tế tại asOfDate.
      */
     @Query("SELECT COALESCE(SUM(d.totalAmount), 0.0) FROM Debt d " +
            "WHERE d.debtType = 'PAYABLE' AND d.isDeleted = false " +
@@ -124,9 +124,10 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     Double getTotalInitialCapital();
 
     /**
-     * @deprecated Lọc theo {@code isPaid = false} và {@code paidAmount} tại thời điểm chạy query —
-     *             không phản ánh đúng trạng thái nợ tại asOfDate trong quá khứ.
-     *             Thay bằng cặp {@link #sumReceivableTotalUpTo} + {@code TransactionRepository#sumReceivablePaidUpTo}.
+     * (Deprecated) Không phản ánh đúng tính lũy kế từ đầu năm/đầu dự án,
+     * mà chỉ lấy số dư theo snapshot hiện tại của isPaid/paidAmount,
+     * làm cho số báo cáo trong quá khứ bị biến động khi khoản nợ được trả ở tương lai.
+     * @deprecated Thay bằng cặp {@link #sumReceivableTotalUpTo} + {@code DebtRepository#sumReceivablePaidUpTo}.
      */
     @Deprecated
     @Query("SELECT COALESCE(SUM(d.totalAmount - d.paidAmount), 0.0) FROM Debt d " +
@@ -135,9 +136,10 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     Double sumReceivableUpTo(@Param("boyEnd") Date boyEnd);
 
     /**
-     * @deprecated Lọc theo {@code isPaid = false} và {@code paidAmount} tại thời điểm chạy query —
-     *             không phản ánh đúng trạng thái nợ tại asOfDate trong quá khứ.
-     *             Thay bằng cặp {@link #sumPayableTotalUpTo} + {@code TransactionRepository#sumPayablePaidUpTo}.
+     * (Deprecated) Không phản ánh đúng tính lũy kế từ đầu năm/đầu dự án,
+     * mà chỉ lấy số dư theo snapshot hiện tại của isPaid/paidAmount,
+     * làm cho số báo cáo trong quá khứ bị biến động khi khoản nợ được trả ở tương lai.
+     * @deprecated Thay bằng cặp {@link #sumPayableTotalUpTo} + {@code DebtRepository#sumPayablePaidUpTo}.
      */
     @Deprecated
     @Query("SELECT COALESCE(SUM(d.totalAmount - d.paidAmount), 0.0) FROM Debt d " +

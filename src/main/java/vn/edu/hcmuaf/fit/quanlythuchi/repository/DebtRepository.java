@@ -67,4 +67,20 @@ public interface DebtRepository extends JpaRepository<Debt, Long> {
             @Param("isPaid")   Boolean isPaid,
             Pageable pageable
     );
+
+    /**
+     * Tổng số tiền đã thanh toán cho các khoản nợ phải thu (RECEIVABLE) tính đến asOfDate.
+     */
+    @Query("SELECT COALESCE(SUM(d.paidAmount), 0.0) FROM Debt d " +
+           "WHERE d.debtType = 'RECEIVABLE' AND d.isDeleted = false " +
+           "AND d.debtDate <= :asOfDate")
+    Double sumReceivablePaidUpTo(@Param("asOfDate") java.util.Date asOfDate);
+
+    /**
+     * Tổng số tiền đã thanh toán cho các khoản nợ phải trả (PAYABLE) tính đến asOfDate.
+     */
+    @Query("SELECT COALESCE(SUM(d.paidAmount), 0.0) FROM Debt d " +
+           "WHERE d.debtType = 'PAYABLE' AND d.isDeleted = false " +
+           "AND d.debtDate <= :asOfDate")
+    Double sumPayablePaidUpTo(@Param("asOfDate") java.util.Date asOfDate);
 }

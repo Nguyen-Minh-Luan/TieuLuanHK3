@@ -62,32 +62,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     /** Lấy tất cả phiếu thu/chi đã thanh toán cho một khoản nợ theo trạng thái */
     List<Transaction> findByDebt_IdAndStatus(Long debtId, vn.edu.hcmuaf.fit.quanlythuchi.entity.TransactionStatus status);
 
-    /**
-     * Tổng số tiền đã thanh toán cho các khoản nợ phải thu (RECEIVABLE) tính đến asOfDate.
-     * Chỉ tính giao dịch ACTIVE có transaction_date &lt;= asOfDate và thuộc khoản nợ có debtDate &lt;= asOfDate.
-     * Dùng kết hợp với {@code ReportRepository#sumReceivableTotalUpTo} để tính số dư nợ phải thu
-     * tại thời điểm asOfDate mà không phụ thuộc vào isPaid/paidAmount hiện tại.
-     */
-    @Query("SELECT COALESCE(SUM(t.amount), 0.0) FROM Transaction t " +
-           "WHERE t.debt.debtType = 'RECEIVABLE' AND t.debt.isDeleted = false " +
-           "AND t.debt.debtDate <= :asOfDate " +
-           "AND t.status = vn.edu.hcmuaf.fit.quanlythuchi.entity.TransactionStatus.ACTIVE " +
-           "AND t.transaction_date <= :asOfDate")
-    Double sumReceivablePaidUpTo(@Param("asOfDate") Date asOfDate);
-
-    /**
-     * Tổng số tiền đã thanh toán cho các khoản nợ phải trả (PAYABLE) tính đến asOfDate.
-     * Chỉ tính giao dịch ACTIVE có transaction_date &lt;= asOfDate và thuộc khoản nợ có debtDate &lt;= asOfDate.
-     * Dùng kết hợp với {@code ReportRepository#sumPayableTotalUpTo} để tính số dư nợ phải trả
-     * tại thời điểm asOfDate mà không phụ thuộc vào isPaid/paidAmount hiện tại.
-     */
-    @Query("SELECT COALESCE(SUM(t.amount), 0.0) FROM Transaction t " +
-           "WHERE t.debt.debtType = 'PAYABLE' AND t.debt.isDeleted = false " +
-           "AND t.debt.debtDate <= :asOfDate " +
-           "AND t.status = vn.edu.hcmuaf.fit.quanlythuchi.entity.TransactionStatus.ACTIVE " +
-           "AND t.transaction_date <= :asOfDate")
-    Double sumPayablePaidUpTo(@Param("asOfDate") Date asOfDate);
-
     @Query("SELECT t FROM Transaction t WHERE t.status != 'CANCELLED'")
     Page<Transaction> findAllActive(Pageable pageable);
 
