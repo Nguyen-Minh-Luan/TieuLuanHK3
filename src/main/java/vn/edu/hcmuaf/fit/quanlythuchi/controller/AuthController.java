@@ -37,6 +37,12 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout() {
+        org.springframework.security.core.Authentication auth =
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated()) {
+            String username = auth.getName();
+            authService.logout(username);
+        }
         return ApiResponse.ok(null, "Đăng xuất thành công");
     }
 

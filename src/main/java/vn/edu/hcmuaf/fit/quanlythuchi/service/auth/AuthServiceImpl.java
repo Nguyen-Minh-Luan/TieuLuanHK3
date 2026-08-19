@@ -38,7 +38,7 @@ public class AuthServiceImpl implements AuthService{
         u.setEmail(email);
         u.setIsDeleted(false);
         u.setRole(role != null ? role : 0);
-        u.setStatus(status != null ? status : "ACTIVE");
+        u.setStatus(status != null ? status : "INACTIVE");
         authRepo.save(u);
         return u.getId();
     }
@@ -64,6 +64,10 @@ public class AuthServiceImpl implements AuthService{
                 throw new RuntimeException("Tài khoản đã bị xoá");
             }
             if (username.equals(u.getUsername()) && hashMachine.matches(password, u.getPassword())) {
+                u.setStatus("ACTIVE");
+                u.setUpdate_at(new Date());
+                authRepo.save(u);
+
                 return UserResponseDTO.builder()
                         .id(u.getId())
                         .username(u.getUsername())
@@ -100,6 +104,18 @@ public class AuthServiceImpl implements AuthService{
         User u = authRepo.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
         return toUserResponseDTO(u);
+    }
+
+    @Override
+    @Transactional
+    public void logout(String username) {
+        Optional<User> optionalUser = authRepo.findByUsername(username);
+        if (optionalUser.isPresent()) {
+            User u = optionalUser.get();
+            u.setStatus("INACTIVE");
+            u.setUpdate_at(new Date());
+            authRepo.save(u);
+        }
     }
 
     @Override

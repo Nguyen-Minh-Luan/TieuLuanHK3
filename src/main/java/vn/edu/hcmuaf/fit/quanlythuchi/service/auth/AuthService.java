@@ -13,6 +13,7 @@ public interface AuthService {
      boolean deleteUser(Long id);
      UserResponseDTO getCurrentUserProfile(String username);
      void updateUser(Long id, User user);
+     void logout(String username);
 
      /**
       * Lấy danh sách người dùng có phân trang và tìm kiếm (chỉ ADMIN).
